@@ -7,8 +7,9 @@ WORKDIR /app
 COPY package*.json ./
 COPY prisma ./prisma/
 
-# 安装所有依赖（包括 devDependencies，因为需要编译）
-RUN npm install
+# 配置 npm 镜像源并安装所有依赖（包括 devDependencies，因为需要编译）
+RUN npm config set registry https://registry.npmmirror.com && \
+    npm install --legacy-peer-deps --network-timeout 600000
 
 # 复制源代码
 COPY . .
@@ -28,8 +29,9 @@ WORKDIR /app
 COPY package*.json ./
 COPY prisma ./prisma/
 
-# 只安装生产依赖
-RUN npm install --omit=dev
+# 配置 npm 镜像源并只安装生产依赖
+RUN npm config set registry https://registry.npmmirror.com && \
+    npm install --omit=dev --legacy-peer-deps --network-timeout 600000
 
 # 生成 Prisma Client（生产环境也需要）
 RUN npx prisma generate
