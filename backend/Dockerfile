@@ -14,8 +14,8 @@ RUN npm config set registry https://registry.npmmirror.com && \
 # 复制源代码
 COPY . .
 
-# 生成 Prisma Client
-RUN npx prisma generate
+# 生成 Prisma Client（使用本地安装的版本）
+RUN npm run prisma:generate
 
 # 编译 TypeScript
 RUN npm run build
@@ -33,8 +33,8 @@ COPY prisma ./prisma/
 RUN npm config set registry https://registry.npmmirror.com && \
     npm install --omit=dev --legacy-peer-deps --network-timeout=600000
 
-# 生成 Prisma Client（生产环境也需要）
-RUN npx prisma generate
+# 生成 Prisma Client（生产环境也需要，使用本地安装的版本）
+RUN npm run prisma:generate
 
 # 从构建阶段复制编译后的代码
 COPY --from=build /app/dist ./dist
@@ -44,6 +44,6 @@ RUN mkdir -p uploads
 
 EXPOSE 3000
 
-# 启动时先执行 Prisma 迁移，再启动应用
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/main.js"]
+# 启动时先执行 Prisma 迁移，再启动应用（使用本地安装的版本）
+CMD ["sh", "-c", "node_modules/.bin/prisma migrate deploy && node dist/main.js"]
 
