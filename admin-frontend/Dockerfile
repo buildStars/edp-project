@@ -14,7 +14,7 @@ RUN npm config set registry https://registry.npmmirror.com && \
 COPY . .
 
 # 构建生产版本（跳过类型检查以避免 vue-tsc 兼容性问题）
-RUN vite build
+RUN npm run build:prod
 
 # Nginx 运行阶段
 FROM nginx:alpine
