@@ -24,6 +24,9 @@ RUN npm run prisma:generate
 # 编译 TypeScript
 RUN npm run build
 
+# 验证编译结果（调试用）
+RUN ls -la dist/ && echo "Build completed successfully"
+
 # 运行阶段
 # 使用 Alpine 3.17，它包含 openssl1.1-compat（Prisma 5.x 需要）
 FROM node:18-alpine3.17
@@ -55,5 +58,5 @@ RUN mkdir -p uploads
 EXPOSE 3000
 
 # 启动时先执行 Prisma 迁移，再启动应用（使用本地安装的版本）
-CMD ["sh", "-c", "node_modules/.bin/prisma migrate deploy && node dist/main.js"]
+CMD ["sh", "-c", "node_modules/.bin/prisma migrate deploy && node dist/src/main.js"]
 
