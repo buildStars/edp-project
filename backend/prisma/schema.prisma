@@ -1,0 +1,1053 @@
+// Prisma Schema for EDP Backend
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ==================== 用户相关 ====================
+
+// 用户表
+model User {
+  id            String      @id @default(uuid())
+  openid        String?     @unique
+  unionid       String?
+  nickname      String?
+  avatar        String?
+  phone         String?     @unique
+  email         String?     @unique
+  password      String?     // 密码（加密存储）
+  realName      String?     // 真实姓名
+  idCard        String?     // 身份证号
+  company       String?     // 公司
+  position      String?     // 职位
+  gender        String?     // 性别
+  role          UserRole    @default(STUDENT)
+  status        UserStatus  @default(ACTIVE)
+  advisorId     String?     // 课程顾问ID
+  profileCompleted Boolean   @default(false) // 是否已完成个人信息引导
+  
+  // 企业账户相关
+  organizationId String?
+  organization   Organization? @relation("OrganizationUsers", fields: [organizationId], references: [id])
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  // 关联
+  credit             Credit?
+  enrollments        Enrollment[]
+  collections        Collection[]
+  downloads          Download[]
+  activities         ActivityLike[]
+  notifications      Notification[]
+  checkins           Checkin[]              // 签到记录
+  evaluations        CourseEvaluation[]     // 课程评价
+  learningAchievements LearningAchievement[] // 学习成果
+  advisor            User?                  @relation("AdvisorStudents", fields: [advisorId], references: [id])
+  students           User[]                 @relation("AdvisorStudents")
+  enrollmentRequests EnrollmentRequest[]    // 报名申请
+  refundRequests     RefundRequest[]        // 退课申请
+  giftsFrom          CourseGift[]           @relation("GiftFrom")   // 赠送的课程
+  giftsTo            CourseGift[]           @relation("GiftTo")     // 收到的课程
+  adminOrganizations Organization[]         @relation("OrganizationAdmin") // 管理的企业
+  
+  // 权限系统关联
+  creditRequestsAsTeacher  CreditRequest[]  @relation("TeacherCreditRequests")  // 作为教师提交的学分申请
+  creditRequestsAsUser     CreditRequest[]  @relation("UserCreditRequests")     // 收到的学分申请
+  creditRequestsAsReviewer CreditRequest[]  @relation("ReviewerCreditRequests") // 作为审批人的学分申请
+  teacherRelations         TeacherStudent[] @relation("TeacherRelations")       // 作为教师的学员关系
+  studentRelations         TeacherStudent[] @relation("StudentRelations")       // 作为学员的教师关系
+  aiReports                AiReport[]                                           // AI报告
+  
+  @@index([openid])
+  @@index([phone])
+  @@index([email])
+  @@index([advisorId])
+  @@map("users")
+}
+
+enum UserRole {
+  STUDENT       // 学员
+  ADVISOR       // 课程顾问
+  TEACHER       // 教师
+  STAFF         // 教务人员
+  ADMIN         // 管理员
+}
+
+enum UserStatus {
+  ACTIVE        // 激活
+  INACTIVE      // 禁用
+}
+
+// 企业组织表
+model Organization {
+  id              String   @id @default(uuid())
+  name            String
+  adminId         String   // 企业总负责人
+  maxStudents     Int      @default(0) // 可上课人数
+  totalCredits    Int      @default(0) // 总学分
+  usedCredits     Int      @default(0) // 已使用学分
+  contactPerson   String?
+  contactPhone    String?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // 关联
+  admin           User     @relation("OrganizationAdmin", fields: [adminId], references: [id])
+  users           User[]   @relation("OrganizationUsers")
+  
+  @@map("organizations")
+}
+
+// ==================== 课程相关 ====================
+
+// 课程表
+model Course {
+  id              String          @id @default(uuid())
+  title           String
+  category        CourseCategory? // 课程分类（已废弃，保留字段以兼容旧数据）
+  coverImage      String?
+  introduction    String?         @db.Text
+  teacherId       String
+  teacherName     String
+  teacherAvatar   String?
+  teacherTitle    String?         // 讲师职称
+  teacherIntro    String?         @db.Text
+  startTime       DateTime
+  endTime         DateTime?
+  location        String?
+  credit          Int             @default(1) // 学分
+  maxStudents     Int?            // 最大人数
+  enrollStatus    EnrollStatus    @default(OPEN)
+  status          CourseStatus    @default(DRAFT)
+  views           Int             @default(0)
+  
+  // 学分标准（新增）
+  creditType      CreditType      @default(NORMAL)  // 课程类型
+  normalCredit    Int             @default(1)       // 普通课程学分
+  masterCredit    Int             @default(2)       // 大师课学分
+  
+  // 结课管理（新增）
+  requiredCheckins Int            @default(0)       // 要求的签到次数（0表示不限制）
+  achievementCredit Int           @default(1)       // 完成课程获得的学习成果学分
+  
+  // 审批状态（新增）
+  approvalStatus  ApprovalStatus  @default(DRAFT)
+  approvalRemark  String?         @db.Text  // 审批备注
+  
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  createdBy       String?         // 创建人
+  approvedBy      String?         // 审批人
+  approvedAt      DateTime?
+  
+  // 关联
+  chapters               CourseChapter[]         // 课程章节
+  enrollments            Enrollment[]
+  materials              CourseMaterial[]
+  checkinSessions        CheckinSession[]        // 签到会话
+  evaluations            CourseEvaluation[]      // 课程评价
+  enrollmentRequests     EnrollmentRequest[]     // 报名申请
+  refundRequests         RefundRequest[]         // 退课申请
+  gifts                  CourseGift[]            // 课程赠送记录
+  completionRequests     CourseCompletionRequest[] // 结课申请
+  learningAchievements   LearningAchievement[]   // 学习成果
+  
+  @@index([startTime])
+  @@map("courses")
+}
+
+// 课程章节表
+model CourseChapter {
+  id            String   @id @default(uuid())
+  courseId      String
+  course        Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  
+  title         String           // 章节标题
+  description   String?  @db.Text // 章节描述
+  sortOrder     Int      @default(0) // 排序号
+  duration      Int?             // 预计时长（分钟）
+  
+  // 章节时间（可选，如果章节有具体的上课时间）
+  startTime     DateTime?
+  endTime       DateTime?
+  location      String?          // 上课地点
+  
+  status        ChapterStatus @default(DRAFT) // 章节状态
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  // 关联
+  materials     CourseMaterial[]      // 章节课件
+  checkinSessions CheckinSession[]    // 章节签到会话
+  evaluations   CourseEvaluation[]    // 章节评价
+  
+  @@index([courseId])
+  @@index([sortOrder])
+  @@map("course_chapters")
+}
+
+// 章节状态枚举
+enum ChapterStatus {
+  DRAFT      // 草稿
+  PUBLISHED  // 已发布
+  COMPLETED  // 已完成
+}
+
+enum CourseCategory {
+  ACCELERATE  // 加速课堂
+  MASTER      // 大师课堂
+  EMPOWER     // 赋能课堂
+}
+
+enum EnrollStatus {
+  OPEN        // 报名中
+  CLOSED      // 已截止
+}
+
+enum CourseStatus {
+  DRAFT       // 草稿
+  PUBLISHED   // 已发布
+  ARCHIVED    // 已归档
+}
+
+// 课件表
+model CourseMaterial {
+  id            String   @id @default(uuid())
+  courseId      String
+  course        Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  chapterId     String?  // 所属章节（可选，为空表示是课程级别的资料）
+  chapter       CourseChapter? @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  title         String
+  fileUrl       String
+  fileSize      Int?
+  fileType      String   @default("pdf")
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  // 关联
+  downloads     Download[]
+  
+  @@index([courseId])
+  @@index([chapterId])
+  @@map("course_materials")
+}
+
+// ==================== 学分相关 ====================
+
+// 学分账户表
+model Credit {
+  id              String         @id @default(uuid())
+  userId          String         @unique
+  balance         Int            @default(0)  // 当前学分余额（统一余额）
+  total           Int            @default(0)  // 累计获得学分（统一总数）
+  used            Int            @default(0)  // 累计消耗学分（统一消耗）
+  
+  // 学分来源统计（用于判断能否赠送课程）
+  personalBalance Int            @default(0)  // 个人学分余额（可用于赠送课程）
+  lockedBalance   Int            @default(0)  // 锁定学分余额（企业分配，不可赠送课程）
+  
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  
+  // 关联
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  records         CreditRecord[]
+  
+  @@index([userId])
+  @@map("credits")
+}
+
+// 学分记录表
+model CreditRecord {
+  id            String           @id @default(uuid())
+  creditId      String
+  type          CreditRecordType
+  amount        Int              // 变动数量（正数=增加，负数=减少）
+  balance       Int              // 操作后余额
+  courseId      String?
+  courseName    String?
+  remark        String?
+  
+  // 企业学分字段
+  source        CreditSource     @default(PERSONAL) // 学分来源
+  fromUserId    String?          // 来源用户（企业管理员）
+  toUserId      String?          // 目标用户（企业员工）
+  
+  createdAt     DateTime         @default(now())
+  
+  // 关联
+  credit        Credit           @relation(fields: [creditId], references: [id], onDelete: Cascade)
+  
+  @@index([creditId])
+  @@index([courseId])
+  @@index([createdAt])
+  @@index([fromUserId])
+  @@index([toUserId])
+  @@map("credit_records")
+}
+
+enum CreditRecordType {
+  EARN             // 获得学分（课程完成奖励）
+  CONSUME          // 消耗学分（报名课程）
+  REFUND           // 退回学分（退课）
+  ADMIN_ADD        // 管理员增加
+  ADMIN_DEDUCT     // 管理员扣除
+  CORPORATE_ALLOCATE  // 企业分配（锁定学分）
+  GIFT_COURSE      // 赠送课程（使用个人学分）
+}
+
+enum CreditSource {
+  PERSONAL    // 个人学分
+  CORPORATE   // 企业学分
+}
+
+// ==================== 报名/签到/评价 ====================
+
+// 报名表
+model Enrollment {
+  id            String           @id @default(uuid())
+  userId        String
+  user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courseId      String
+  course        Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  status        EnrollmentStatus @default(ENROLLED)
+  
+  // 签到相关
+  checkedIn     Boolean          @default(false)
+  checkInTime   DateTime?
+  checkins      Checkin[]        // 签到记录（支持多次签到）
+  
+  // 评价相关
+  rated         Boolean          @default(false)
+  rating        Int?             // 评分 1-5
+  ratingTime    DateTime?
+  
+  // 试听申请相关
+  isTrial       Boolean          @default(false)
+  trialName     String?
+  trialPhone    String?
+  trialCompany  String?
+  trialPosition String?
+  trialStatus   TrialStatus?
+  
+  // 赠送相关
+  isGift        Boolean          @default(false)  // 是否为赠送课程
+  giftFrom      String?          // 赠送人ID
+  
+  // 结课海报相关
+  completionPosterShown Boolean  @default(false)  // 是否已显示过结课海报
+  completionPosterUrl   String?  // 结课海报URL
+  
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  
+  // 关联
+  refundRequests RefundRequest[]  // 退课申请
+  
+  @@unique([userId, courseId])
+  @@index([userId])
+  @@index([courseId])
+  @@map("enrollments")
+}
+
+enum EnrollmentStatus {
+  ENROLLED    // 已报名
+  COMPLETED   // 已完成
+  CANCELLED   // 已取消
+}
+
+enum TrialStatus {
+  PENDING     // 待审核
+  APPROVED    // 已通过
+  REJECTED    // 已拒绝
+}
+
+// ==================== CMS内容管理 ====================
+
+// 资讯表
+model News {
+  id            String       @id @default(uuid())
+  title         String
+  category      NewsCategory
+  coverImage    String?
+  summary       String?
+  content       String       @db.Text
+  publishTime   DateTime     @default(now())
+  status        ContentStatus @default(DRAFT)
+  isTop         Boolean      @default(false) // 是否置顶
+  views         Int          @default(0)
+  
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  createdBy     String?
+  
+  // 关联
+  collections   Collection[]
+  
+  @@index([category])
+  @@index([publishTime])
+  @@map("news")
+}
+
+enum NewsCategory {
+  NOTICE      // 学院通知
+  ALUMNI      // 校友动态
+}
+
+enum ContentStatus {
+  DRAFT       // 草稿
+  PUBLISHED   // 已发布
+  ARCHIVED    // 已归档
+}
+
+// 协会表
+model Association {
+  id            String           @id @default(uuid())
+  name          String
+  type          AssociationType
+  logo          String?
+  description   String?
+  introduction  String?          @db.Text
+  contactPerson String?
+  contactPhone  String?
+  contactEmail  String?
+  wechat        String?
+  views         Int              @default(0)
+  
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  
+  // 关联
+  activities    Activity[]
+  
+  @@index([type])
+  @@map("associations")
+}
+
+enum AssociationType {
+  ALUMNI      // 同学会
+  CLUB        // 俱乐部
+}
+
+// 活动表
+model Activity {
+  id              String        @id @default(uuid())
+  associationId   String?
+  association     Association?  @relation(fields: [associationId], references: [id])
+  title           String
+  images          String        @db.Text // JSON数组
+  content         String        @db.Text
+  publishTime     DateTime      @default(now())
+  status          ContentStatus @default(PUBLISHED)
+  views           Int           @default(0)
+  likes           Int           @default(0)
+  
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  // 关联
+  activityLikes   ActivityLike[]
+  
+  @@index([associationId])
+  @@index([publishTime])
+  @@map("activities")
+}
+
+// 活动点赞表
+model ActivityLike {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  activityId  String
+  activity    Activity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime @default(now())
+  
+  @@unique([userId, activityId])
+  @@index([userId])
+  @@index([activityId])
+  @@map("activity_likes")
+}
+
+// 收藏表
+model Collection {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  newsId    String
+  news      News     @relation(fields: [newsId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  
+  @@unique([userId, newsId])
+  @@index([userId])
+  @@map("collections")
+}
+
+// 下载记录表
+model Download {
+  id          String         @id @default(uuid())
+  userId      String
+  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  materialId  String
+  material    CourseMaterial @relation(fields: [materialId], references: [id], onDelete: Cascade)
+  
+  createdAt   DateTime       @default(now())
+  
+  @@index([userId])
+  @@index([materialId])
+  @@map("downloads")
+}
+
+// ==================== 消息通知 ====================
+
+// 消息通知表
+model Notification {
+  id          String             @id @default(uuid())
+  userId      String
+  type        NotificationType
+  title       String
+  content     String             @db.Text
+  data        Json?              // 额外数据（如链接、关联ID等）
+  isRead      Boolean            @default(false)
+  readAt      DateTime?
+  
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  
+  // 关联
+  user        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([isRead])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+enum NotificationType {
+  NEWS_UPDATE          // 资讯更新
+  ACTIVITY_REMIND      // 活动提醒
+  COURSE_CHECKIN       // 课程签到
+  ENROLLMENT_AUDIT     // 报名审核
+  COURSE_EVALUATE      // 评价提醒
+  CREDIT_EXPIRE        // 学分到期
+  SYSTEM               // 系统通知
+  ENROLLMENT_REQUEST   // 报名申请
+  REFUND_REQUEST       // 退课申请
+  COURSE_GIFT          // 课程赠送
+}
+
+// ==================== 签到系统 ====================
+
+// 签到会话表（教师发起签到）
+model CheckinSession {
+  id          String   @id @default(uuid())
+  courseId    String
+  chapterId   String?  // 所属章节（可选，为空表示是课程级别的签到）
+  code        String   @unique  // 6位签到码
+  startTime   DateTime @default(now())
+  endTime     DateTime // 签到截止时间
+  isActive    Boolean  @default(true)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // 关联
+  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  chapter     CourseChapter? @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  checkins    Checkin[]
+  
+  @@index([courseId])
+  @@index([chapterId])
+  @@index([code])
+  @@index([isActive])
+  @@map("checkin_sessions")
+}
+
+// 签到记录表
+model Checkin {
+  id            String         @id @default(uuid())
+  sessionId     String
+  enrollmentId  String
+  userId        String
+  checkinTime   DateTime       @default(now())
+  checkinMethod CheckinMethod  @default(CODE)  // 签到方式
+  
+  // 补签相关
+  isMakeup      Boolean        @default(false)  // 是否补签
+  makeupBy      String?        // 补签操作人ID
+  makeupReason  String?        // 补签原因
+  makeupTime    DateTime?      // 补签时间
+  
+  // 关联
+  session       CheckinSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  enrollment    Enrollment     @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([sessionId, userId])  // 同一会话只能签到一次
+  @@index([sessionId])
+  @@index([userId])
+  @@index([isMakeup])  // 补签查询索引
+  @@map("checkins")
+}
+
+enum CheckinMethod {
+  QRCODE  // 二维码签到
+  CODE    // 签到码签到
+  MAKEUP  // 补签
+}
+
+// 报名申请表（学分不足时）
+model EnrollmentRequest {
+  id          String                @id @default(uuid())
+  userId      String
+  courseId    String
+  
+  // 申请人信息
+  realName    String
+  phone       String
+  company     String?
+  position    String?
+  remark      String?               // 备注
+  
+  // 审批状态
+  status      EnrollmentRequestStatus @default(PENDING)
+  reviewedBy  String?                // 审批人ID
+  reviewedAt  DateTime?              // 审批时间
+  reviewNote  String?                // 审批备注
+  
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+  
+  // 关联
+  user        User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course      Course                @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([courseId])
+  @@index([status])
+  @@map("enrollment_requests")
+}
+
+enum EnrollmentRequestStatus {
+  PENDING   // 待审批
+  APPROVED  // 已通过（已充值）
+  REJECTED  // 已拒绝
+}
+
+// 退课申请表
+model RefundRequest {
+  id            String              @id @default(uuid())
+  enrollmentId  String
+  userId        String
+  courseId      String
+  
+  // 退课信息
+  reason        String?              // 退课原因
+  creditAmount  Int                  // 退回学分数
+  
+  // 审批状态
+  status        RefundRequestStatus @default(PENDING)
+  reviewedBy    String?              // 审批人ID
+  reviewedAt    DateTime?            // 审批时间
+  reviewNote    String?              // 审批备注
+  
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+  
+  // 关联
+  enrollment    Enrollment          @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  user          User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course        Course              @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([courseId])
+  @@index([status])
+  @@map("refund_requests")
+}
+
+enum RefundRequestStatus {
+  PENDING   // 待审批
+  APPROVED  // 已通过（已退款）
+  REJECTED  // 已拒绝
+}
+
+// 赠送课程记录表
+model CourseGift {
+  id          String      @id @default(uuid())
+  courseId    String
+  
+  // 赠送方
+  fromUserId  String
+  fromUser    User        @relation("GiftFrom", fields: [fromUserId], references: [id], onDelete: Cascade)
+  
+  // 接收方（可选，领取后填充）
+  toUserId    String?
+  toUser      User?       @relation("GiftTo", fields: [toUserId], references: [id], onDelete: Cascade)
+  
+  // 赠送信息
+  message     String?     // 赠送留言
+  creditCost  Int         // 消耗学分
+  giftCode    String?     @unique  // 礼物码（用于分享领取）
+  
+  // 接收状态
+  status      GiftStatus  @default(PENDING)
+  acceptedAt  DateTime?   // 接收时间
+  
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  
+  // 关联
+  course      Course      @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  
+  @@index([fromUserId])
+  @@index([toUserId])
+  @@index([courseId])
+  @@index([status])
+  @@index([giftCode])
+  @@map("course_gifts")
+}
+
+enum GiftStatus {
+  PENDING   // 待接收
+  ACCEPTED  // 已接收
+  REJECTED  // 已拒绝
+  EXPIRED   // 已过期
+}
+
+// ==================== 课程评价 ====================
+
+// 课程评价表
+model CourseEvaluation {
+  id          String   @id @default(uuid())
+  courseId    String
+  chapterId   String?  // 所属章节（可选，为空表示是课程级别的评价）
+  userId      String
+  enrollmentId String? // 关联的报名记录
+  
+  // 评分（1-5星）
+  rating      Int      // 评分（1-5）
+  
+  // 评价维度（可选）
+  contentRating    Int?  // 内容质量评分（1-5）
+  teacherRating    Int?  // 讲师评分（1-5）
+  organizationRating Int? // 组织评分（1-5）
+  
+  // 评价内容
+  comment     String?  @db.Text // 评价内容
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // 关联
+  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  chapter     CourseChapter? @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // 注意：不使用 @@unique([courseId, chapterId, userId]) 因为 chapterId 可能为 null
+  // 使用应用层逻辑来确保一个用户对每个课程/章节只能评价一次
+  @@index([courseId])
+  @@index([chapterId])
+  @@index([userId])
+  @@index([rating])
+  @@index([courseId, chapterId, userId])  // 用于查询优化
+  @@map("course_evaluations")
+}
+
+// ==================== 权限系统相关 ====================
+
+// 学分申请表
+model CreditRequest {
+  id          String              @id @default(uuid())
+  
+  // 申请信息
+  teacherId   String              // 提交教师
+  teacher     User                @relation("TeacherCreditRequests", fields: [teacherId], references: [id], onDelete: Cascade)
+  
+  userId      String              // 目标学员/企业
+  user        User                @relation("UserCreditRequests", fields: [userId], references: [id], onDelete: Cascade)
+  
+  amount      Int                 // 申请学分数量
+  reason      String              @db.Text  // 申请理由
+  
+  // 审批信息
+  status      CreditRequestStatus @default(PENDING)
+  reviewerId  String?             // 审批人
+  reviewer    User?               @relation("ReviewerCreditRequests", fields: [reviewerId], references: [id], onDelete: SetNull)
+  reviewRemark String?            @db.Text  // 审批备注
+  reviewTime  DateTime?
+  
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  
+  @@index([teacherId])
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("credit_requests")
+}
+
+// 教师-学员关系表
+model TeacherStudent {
+  id          String   @id @default(uuid())
+  teacherId   String   // 教师ID
+  teacher     User     @relation("TeacherRelations", fields: [teacherId], references: [id], onDelete: Cascade)
+  studentId   String   // 学员ID
+  student     User     @relation("StudentRelations", fields: [studentId], references: [id], onDelete: Cascade)
+  
+  // 关系信息
+  registeredBy String  // 注册方式: TEACHER_REGISTER(教师注册) | SELF_REGISTER(自己注册后绑定)
+  bindTime    DateTime @default(now())
+  remark      String?  @db.Text  // 备注
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@unique([teacherId, studentId])
+  @@index([teacherId])
+  @@index([studentId])
+  @@map("teacher_students")
+}
+
+// 学分申请状态枚举
+enum CreditRequestStatus {
+  PENDING    // 待审批
+  APPROVED   // 已通过
+  REJECTED   // 已拒绝
+  CANCELLED  // 已取消
+}
+
+// 课程类型枚举
+enum CreditType {
+  NORMAL    // 平时课程
+  MASTER    // 大师课
+}
+
+// 审批状态枚举
+enum ApprovalStatus {
+  DRAFT           // 草稿
+  PENDING_REVIEW  // 待审批
+  APPROVED        // 已通过
+  REJECTED        // 已拒绝
+}
+
+// ==================== 权限管理系统 ====================
+
+// 权限表
+model Permission {
+  id          String   @id @default(uuid())
+  code        String   @unique  // 权限代码，如：course:view, user:create
+  name        String              // 权限名称
+  description String?             // 权限描述
+  module      String              // 所属模块：dashboard, course, user, etc.
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // 关联
+  rolePermissions RolePermission[]
+  
+  @@index([module])
+  @@map("permissions")
+}
+
+// 角色权限关联表
+model RolePermission {
+  id           String     @id @default(uuid())
+  role         UserRole              // 角色
+  permissionId String                // 权限ID
+  createdAt    DateTime   @default(now())
+  
+  // 关联
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  
+  @@unique([role, permissionId])
+  @@index([role])
+  @@index([permissionId])
+  @@map("role_permissions")
+}
+
+// ==================== 学习成果管理 ====================
+
+// 学习成果记录表（区别于消费学分）
+model LearningAchievement {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courseId        String
+  course          Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  
+  credit          Int      @default(1)        // 获得的学习成果学分
+  checkinCount    Int      @default(0)        // 实际签到次数
+  requiredCheckins Int     @default(0)        // 要求的签到次数
+  
+  issuedBy        String?                     // 发放人ID（教师或管理员）
+  issuedAt        DateTime @default(now())    // 发放时间
+  
+  remark          String?  @db.Text           // 备注
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@unique([userId, courseId])  // 一个用户一个课程只能有一条学习成果记录
+  @@index([userId])
+  @@index([courseId])
+  @@index([issuedAt])
+  @@map("learning_achievements")
+}
+
+// 结课申请表
+model CourseCompletionRequest {
+  id              String   @id @default(uuid())
+  courseId        String
+  course          Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  
+  teacherId       String                      // 申请教师ID
+  teacherName     String                      // 申请教师姓名
+  
+  status          CompletionRequestStatus @default(PENDING)
+  
+  totalStudents   Int      @default(0)        // 总学员数
+  qualifiedStudents Int    @default(0)        // 符合条件的学员数
+  
+  reviewerId      String?                     // 审批人ID
+  reviewerName    String?                     // 审批人姓名
+  reviewedAt      DateTime?                   // 审批时间
+  reviewRemark    String?  @db.Text           // 审批备注
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([courseId])
+  @@index([teacherId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("course_completion_requests")
+}
+
+// 结课申请状态枚举
+enum CompletionRequestStatus {
+  PENDING    // 待审批
+  APPROVED   // 已通过
+  REJECTED   // 已拒绝
+  CANCELLED  // 已取消
+}
+
+// AI配置表
+model AiConfig {
+  id          String   @id @default(uuid())
+  name        String   // AI模型名称（如：GPT-4、文心一言等）
+  provider    String   // 提供商（如：openai、baidu等）
+  apiKey      String   @db.Text  // API Key（加密存储）
+  apiUrl      String?  // API地址（可选，默认使用官方地址）
+  model       String   // 模型版本（如：gpt-4、gpt-3.5-turbo）
+  isActive    Boolean  @default(false)  // 是否启用
+  maxTokens   Int      @default(2000)   // 最大token数
+  temperature Float    @default(0.7)    // 温度参数
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@map("ai_configs")
+}
+
+// AI报告表
+model AiReport {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  year            Int      // 报告年份
+  reportType      String   @default("ANNUAL")  // 报告类型（年度、季度等）
+  
+  // 学习统计数据
+  totalCredits    Int      @default(0)  // 总学分
+  totalCourses    Int      @default(0)  // 总课程数
+  totalHours      Int      @default(0)  // 总学时
+  
+  // AI生成内容
+  summary         String?  @db.Text     // 学习总结
+  achievements    String?  @db.Text     // 主要成就
+  knowledgePoints String?  @db.Text     // 学习知识点
+  recommendations String?  @db.Text     // 推荐建议
+  radarData       String?  @db.Text     // 能力雷达图数据（JSON）
+  
+  // 元数据
+  aiModel         String?              // 使用的AI模型
+  generatedAt     DateTime @default(now())
+  viewCount       Int      @default(0)  // 查看次数
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([userId])
+  @@index([year])
+  @@index([userId, year])
+  @@map("ai_reports")
+}
+
+// ==================== 系统设置相关 ====================
+
+// 轮播图表
+model Banner {
+  id          String   @id @default(uuid())
+  title       String               // 标题
+  imageUrl    String               // 图片URL
+  linkType    BannerLinkType       // 链接类型
+  linkUrl     String?              // 链接地址（外部链接）
+  targetId    String?              // 目标ID（课程/资讯/活动ID）
+  sortOrder   Int      @default(0) // 排序号
+  isActive    Boolean  @default(true) // 是否启用
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([sortOrder])
+  @@index([isActive])
+  @@map("banners")
+}
+
+enum BannerLinkType {
+  NONE     // 无链接
+  URL      // 外部链接
+  COURSE   // 课程详情
+  NEWS     // 资讯详情
+  ACTIVITY // 活动详情
+}
+
+// 系统配置表
+model SystemConfig {
+  id          String   @id @default(uuid())
+  
+  // 小程序基础信息
+  appName     String   @default("北大汇丰EDP")  // 小程序名称
+  appLogo     String?                            // 小程序Logo
+  appDesc     String?  @db.Text                  // 小程序描述
+  
+  // 联系方式
+  contactPhone    String?  // 联系电话
+  contactEmail    String?  // 联系邮箱
+  contactAddress  String?  // 联系地址
+  
+  // 其他配置
+  isMaintenance   Boolean  @default(false)  // 是否维护模式
+  maintenanceMsg  String?  @db.Text        // 维护提示信息
+  
+  // 社交媒体
+  wechatQrCode    String?  // 微信二维码
+  weiboUrl        String?  // 微博链接
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@map("system_config")
+}
+

@@ -1,0 +1,83 @@
+# Node modules
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Build output
+dist/
+build/
+.next/
+out/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+.env.production
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*.swn
+.DS_Store
+
+# Logs
+logs/
+*.log
+lerna-debug.log*
+
+# Testing
+coverage/
+.nyc_output/
+
+# OS
+.DS_Store
+Thumbs.db
+*.tmp
+*.temp
+~*
+
+# Cache
+.cache/
+.eslintcache
+
+# Uploads
+uploads/
+temp/
+
+# Database
+*.db
+*.sqlite
+
+# Prisma
+prisma/migrations/*_*
+!prisma/migrations/.gitkeep
+
+# Docker
+.docker/
+
+# PM2
+.pm2/
+
+# Uni-app
+unpackage/
+.hbuilderx/
+
+# 备份文件
+*.backup
+*.bak
+*-backup.tar.gz
+
+# 临时文档（保留主要文档，删除临时总结）
+*总结.md
+*说明.md
+*指南.md
+*修复.md
+!README.md
+!项目启动指南.md
+!Docker部署方案完整指南.md
+

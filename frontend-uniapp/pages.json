@@ -1,0 +1,295 @@
+{
+  "pages": [
+    {
+      "path": "pages/index/index",
+      "style": {
+        "navigationBarTitleText": "首页",
+        "enablePullDownRefresh": true,
+        "backgroundTextStyle": "dark"
+      }
+    },
+    {
+      "path": "pages/news/index",
+      "style": {
+        "navigationBarTitleText": "学校资讯",
+        "enablePullDownRefresh": true,
+        "backgroundTextStyle": "dark"
+      }
+    },
+    {
+      "path": "pages/news/detail",
+      "style": {
+        "navigationBarTitleText": "资讯详情",
+        "enablePullDownRefresh": false
+      }
+    },
+    {
+      "path": "pages/association/index",
+      "style": {
+        "navigationBarTitleText": "校友生活",
+        "enablePullDownRefresh": true
+      }
+    },
+    {
+      "path": "pages/association/detail",
+      "style": {
+        "navigationBarTitleText": "活动详情",
+        "enablePullDownRefresh": true
+      }
+    },
+    {
+      "path": "pages/association/activity-detail",
+      "style": {
+        "navigationBarTitleText": "活动详情",
+        "enablePullDownRefresh": false
+      }
+    },
+    {
+      "path": "pages/course/index",
+      "style": {
+        "navigationBarTitleText": "课程中心",
+        "enablePullDownRefresh": true
+      }
+    },
+    {
+      "path": "pages/course/detail",
+      "style": {
+        "navigationBarTitleText": "课程详情",
+        "enablePullDownRefresh": false
+      }
+    },
+    {
+      "path": "pages/course/chapters",
+      "style": {
+        "navigationBarTitleText": "课程章节",
+        "navigationStyle": "custom",
+        "enablePullDownRefresh": true
+      }
+    },
+    {
+      "path": "pages/course/chapter-detail",
+      "style": {
+        "navigationBarTitleText": "章节详情",
+        "navigationStyle": "custom",
+        "enablePullDownRefresh": false
+      }
+    },
+    {
+      "path": "pages/mine/index",
+      "style": {
+        "navigationBarTitleText": "个人中心",
+        "enablePullDownRefresh": true
+      }
+    },
+    {
+      "path": "pages/mine/edit-info",
+      "style": {
+        "navigationBarTitleText": "编辑资料"
+      }
+    },
+    {
+      "path": "pages/mine/my-courses",
+      "style": {
+        "navigationBarTitleText": "我的课程"
+      }
+    },
+    {
+      "path": "pages/mine/my-credits",
+      "style": {
+        "navigationBarTitleText": "我的学分"
+      }
+    },
+    {
+      "path": "pages/mine/my-collection",
+      "style": {
+        "navigationBarTitleText": "我的收藏"
+      }
+    },
+    {
+      "path": "pages/mine/download-list",
+      "style": {
+        "navigationBarTitleText": "课件下载"
+      }
+    },
+    {
+      "path": "pages/mine/messages",
+      "style": {
+        "navigationBarTitleText": "消息中心",
+        "enablePullDownRefresh": true
+      }
+    },
+    {
+      "path": "pages/ai-report/annual",
+      "style": {
+        "navigationBarTitleText": "年度报告",
+        "navigationStyle": "custom",
+        "enablePullDownRefresh": false
+      }
+    },
+    {
+      "path": "pages/ai/report",
+      "style": {
+        "navigationBarTitleText": "AI年度报告"
+      }
+    },
+    {
+      "path": "pages/search/index",
+      "style": {
+        "navigationBarTitleText": "搜索"
+      }
+    },
+    {
+      "path": "pages/enrollment-request/create",
+      "style": {
+        "navigationBarTitleText": "报名申请"
+      }
+    },
+    {
+      "path": "pages/enrollment-request/list",
+      "style": {
+        "navigationBarTitleText": "我的报名申请"
+      }
+    },
+    {
+      "path": "pages/refund-request/create",
+      "style": {
+        "navigationBarTitleText": "退课申请"
+      }
+    },
+    {
+      "path": "pages/refund-request/list",
+      "style": {
+        "navigationBarTitleText": "我的退课申请"
+      }
+    },
+    {
+      "path": "pages/course-gift/create",
+      "style": {
+        "navigationBarTitleText": "赠送课程"
+      }
+    },
+    {
+      "path": "pages/course-gift/claim",
+      "style": {
+        "navigationBarTitleText": "领取课程",
+        "navigationBarBackgroundColor": "#667eea",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/evaluation/create",
+      "style": {
+        "navigationBarTitleText": "课程评价",
+        "navigationBarBackgroundColor": "#FFB400",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/materials/list",
+      "style": {
+        "navigationBarTitleText": "课程课件",
+        "navigationBarBackgroundColor": "#667eea",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/checkin/records",
+      "style": {
+        "navigationBarTitleText": "签到记录",
+        "navigationStyle": "custom",
+        "enablePullDownRefresh": false
+      }
+    },
+    {
+      "path": "pages/corporate/employees",
+      "style": {
+        "navigationBarTitleText": "企业员工管理",
+        "navigationBarBackgroundColor": "#667eea",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/corporate/purchase-course",
+      "style": {
+        "navigationBarTitleText": "为员工购买课程",
+        "navigationBarBackgroundColor": "#667eea",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/course-gift/list",
+      "style": {
+        "navigationBarTitleText": "赠送记录"
+      }
+    },
+    {
+      "path": "pages/login/index",
+      "style": {
+        "navigationBarTitleText": "登录"
+      }
+    },
+    {
+      "path": "pages/login/complete-info",
+      "style": {
+        "navigationBarTitleText": "完善信息",
+        "navigationBarBackgroundColor": "#C8161D",
+        "navigationBarTextStyle": "white"
+      }
+    },
+    {
+      "path": "pages/webview/index",
+      "style": {
+        "navigationBarTitleText": "加载中..."
+      }
+    },
+    {
+      "path": "pages/about/index",
+      "style": {
+        "navigationBarTitleText": "关于我们"
+      }
+    }
+  ],
+  "globalStyle": {
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "北大汇丰EDP",
+    "navigationBarBackgroundColor": "#FFFFFF",
+    "backgroundColor": "#F8F8F8"
+  },
+  "tabBar": {
+    "color": "#999999",
+    "selectedColor": "#C8161D",
+    "borderStyle": "black",
+    "backgroundColor": "#FFFFFF",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "iconPath": "static/tabbar/home.png",
+        "selectedIconPath": "static/tabbar/home-active.png",
+        "text": "首页"
+      },
+      {
+        "pagePath": "pages/association/index",
+        "iconPath": "static/tabbar/association.png",
+        "selectedIconPath": "static/tabbar/association-active.png",
+        "text": "校友生活"
+      },
+      {
+        "pagePath": "pages/course/index",
+        "iconPath": "static/tabbar/course.png",
+        "selectedIconPath": "static/tabbar/course-active.png",
+        "text": "课程中心"
+      },
+      {
+        "pagePath": "pages/mine/index",
+        "iconPath": "static/tabbar/mine.png",
+        "selectedIconPath": "static/tabbar/mine-active.png",
+        "text": "个人中心"
+      }
+    ]
+  },
+  "condition": {
+    "current": 0,
+    "list": []
+  }
+}
+
