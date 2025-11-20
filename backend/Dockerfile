@@ -57,6 +57,6 @@ RUN mkdir -p uploads
 
 EXPOSE 3000
 
-# 启动时先执行 Prisma 迁移，再启动应用（使用本地安装的版本）
-CMD ["sh", "-c", "node_modules/.bin/prisma migrate deploy && node dist/src/main.js"]
+# 启动时先同步数据库结构（使用 db push 而不是 migrate），再启动应用
+CMD ["sh", "-c", "node_modules/.bin/prisma db push --skip-generate --accept-data-loss && node dist/src/main.js"]
 
