@@ -1,5 +1,6 @@
 # 构建 Vue 前端
-FROM node:18-alpine AS build
+# 使用 Alpine 3.17 保持与后端一致
+FROM node:18-alpine3.17 AS build
 
 WORKDIR /app
 

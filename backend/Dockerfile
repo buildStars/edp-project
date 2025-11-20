@@ -1,5 +1,6 @@
 # 构建阶段：编译 Nest + 生成 Prisma Client
-FROM node:18-alpine AS build
+# 使用 Alpine 3.17，它包含 openssl1.1-compat（Prisma 5.x 需要）
+FROM node:18-alpine3.17 AS build
 
 # 安装 OpenSSL 兼容库（Prisma 需要）
 RUN apk add --no-cache openssl1.1-compat
@@ -24,7 +25,8 @@ RUN npm run prisma:generate
 RUN npm run build
 
 # 运行阶段
-FROM node:18-alpine
+# 使用 Alpine 3.17，它包含 openssl1.1-compat（Prisma 5.x 需要）
+FROM node:18-alpine3.17
 
 # 安装 OpenSSL 兼容库（Prisma 需要）
 RUN apk add --no-cache openssl1.1-compat
