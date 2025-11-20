@@ -3,13 +3,26 @@ import { PrismaService } from '../../infrastructure/prisma/prisma.service';
 import { CreateGiftDto } from './dto/create-gift.dto';
 import { QueryGiftDto } from './dto/query-gift.dto';
 import { GiftStatus, CreditRecordType } from '@prisma/client';
-import { nanoid } from 'nanoid';
+import { randomBytes } from 'crypto';
 
 @Injectable()
 export class CourseGiftsService {
   private readonly logger = new Logger(CourseGiftsService.name);
 
   constructor(private prisma: PrismaService) {}
+
+  /**
+   * 生成随机礼物码（替代 nanoid）
+   */
+  private generateGiftCode(length: number = 8): string {
+    const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+    const bytes = randomBytes(length);
+    let result = '';
+    for (let i = 0; i < length; i++) {
+      result += chars[bytes[i] % chars.length];
+    }
+    return result;
+  }
 
   /**
    * 生成礼物码（用于分享）
@@ -36,7 +49,7 @@ export class CourseGiftsService {
     }
 
     // 生成唯一的礼物码（8位）
-    const giftCode = nanoid(8);
+    const giftCode = this.generateGiftCode(8);
 
     // 开启事务处理
     return await this.prisma.$transaction(async (tx) => {
