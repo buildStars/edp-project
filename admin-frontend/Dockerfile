@@ -8,7 +8,7 @@ COPY package*.json ./
 
 # 配置 npm 镜像源（使用淘宝镜像）并安装依赖
 RUN npm config set registry https://registry.npmmirror.com && \
-    npm install --legacy-peer-deps --network-timeout 600000
+    npm install --legacy-peer-deps --network-timeout=600000
 
 # 复制源代码
 COPY . .
