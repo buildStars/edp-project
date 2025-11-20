@@ -21,6 +21,9 @@ export function getOrganization(id: string) {
   })
 }
 
+// 别名导出（兼容旧代码）
+export const getOrganizationDetail = getOrganization
+
 /**
  * 创建企业
  */
