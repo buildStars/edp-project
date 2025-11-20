@@ -76,187 +76,215 @@ async function seedPermissions() {
   log('\n🔑 初始化权限数据...', 'blue');
 
   try {
-    // 检查是否已有权限数据
-    const count = await prisma.rolePermission.count();
-    if (count > 0) {
-      log(`✅ 权限数据已存在 (共 ${count} 条)`, 'green');
-      return;
+    // 定义所有权限（code -> 权限详情）
+    const allPermissions = [
+      // 用户管理
+      { code: 'user:view', name: '查看用户', module: 'user', description: '查看用户列表和详情' },
+      { code: 'user:create', name: '创建用户', module: 'user', description: '创建新用户' },
+      { code: 'user:edit', name: '编辑用户', module: 'user', description: '编辑用户信息' },
+      { code: 'user:delete', name: '删除用户', module: 'user', description: '删除用户' },
+      { code: 'user:role', name: '分配角色', module: 'user', description: '修改用户角色' },
+      { code: 'user:status', name: '修改状态', module: 'user', description: '启用/禁用用户' },
+
+      // 课程管理
+      { code: 'course:view', name: '查看课程', module: 'course', description: '查看课程列表和详情' },
+      { code: 'course:create', name: '创建课程', module: 'course', description: '创建新课程' },
+      { code: 'course:edit', name: '编辑课程', module: 'course', description: '编辑课程信息' },
+      { code: 'course:delete', name: '删除课程', module: 'course', description: '删除课程' },
+      { code: 'course:approve', name: '审批课程', module: 'course', description: '审批课程发布' },
+      { code: 'course:publish', name: '发布课程', module: 'course', description: '发布课程' },
+      { code: 'course:assign-teacher', name: '分配教师', module: 'course', description: '为课程分配教师' },
+
+      // 章节管理
+      { code: 'chapter:view', name: '查看章节', module: 'chapter', description: '查看章节列表' },
+      { code: 'chapter:create', name: '创建章节', module: 'chapter', description: '创建新章节' },
+      { code: 'chapter:edit', name: '编辑章节', module: 'chapter', description: '编辑章节信息' },
+      { code: 'chapter:delete', name: '删除章节', module: 'chapter', description: '删除章节' },
+
+      // 学分管理
+      { code: 'credit:view', name: '查看学分', module: 'credit', description: '查看学分记录' },
+      { code: 'credit:allocate', name: '分配学分', module: 'credit', description: '为用户分配学分' },
+      { code: 'credit:deduct', name: '扣除学分', module: 'credit', description: '扣除用户学分' },
+      { code: 'credit:request:view', name: '查看学分申请', module: 'credit', description: '查看学分申请' },
+      { code: 'credit:request:review', name: '审批学分申请', module: 'credit', description: '审批学分申请' },
+
+      // 报名管理
+      { code: 'enrollment:view', name: '查看报名', module: 'enrollment', description: '查看报名记录' },
+      { code: 'enrollment:approve', name: '审批报名', module: 'enrollment', description: '审批报名申请' },
+      { code: 'enrollment:trial:view', name: '查看试听申请', module: 'enrollment', description: '查看试听申请' },
+      { code: 'enrollment:trial:approve', name: '审批试听', module: 'enrollment', description: '审批试听申请' },
+      { code: 'enrollment:refund:view', name: '查看退课申请', module: 'enrollment', description: '查看退课申请' },
+      { code: 'enrollment:refund:approve', name: '审批退课', module: 'enrollment', description: '审批退课申请' },
+
+      // 签到管理
+      { code: 'checkin:view', name: '查看签到', module: 'checkin', description: '查看签到记录' },
+      { code: 'checkin:create', name: '创建签到', module: 'checkin', description: '创建签到会话' },
+      { code: 'checkin:delete', name: '删除签到', module: 'checkin', description: '删除签到记录' },
+      { code: 'checkin:makeup', name: '补签', module: 'checkin', description: '为学员补签' },
+
+      // 资讯管理
+      { code: 'news:view', name: '查看资讯', module: 'news', description: '查看资讯列表' },
+      { code: 'news:create', name: '创建资讯', module: 'news', description: '创建新资讯' },
+      { code: 'news:edit', name: '编辑资讯', module: 'news', description: '编辑资讯内容' },
+      { code: 'news:delete', name: '删除资讯', module: 'news', description: '删除资讯' },
+      { code: 'news:publish', name: '发布资讯', module: 'news', description: '发布资讯' },
+
+      // 活动管理
+      { code: 'activity:view', name: '查看活动', module: 'activity', description: '查看活动列表' },
+      { code: 'activity:create', name: '创建活动', module: 'activity', description: '创建新活动' },
+      { code: 'activity:edit', name: '编辑活动', module: 'activity', description: '编辑活动内容' },
+      { code: 'activity:delete', name: '删除活动', module: 'activity', description: '删除活动' },
+
+      // 组织管理
+      { code: 'association:view', name: '查看组织', module: 'association', description: '查看组织列表' },
+      { code: 'association:create', name: '创建组织', module: 'association', description: '创建新组织' },
+      { code: 'association:edit', name: '编辑组织', module: 'association', description: '编辑组织信息' },
+      { code: 'association:delete', name: '删除组织', module: 'association', description: '删除组织' },
+
+      // 企业管理
+      { code: 'organization:view', name: '查看企业', module: 'organization', description: '查看企业列表' },
+      { code: 'organization:create', name: '创建企业', module: 'organization', description: '创建新企业' },
+      { code: 'organization:edit', name: '编辑企业', module: 'organization', description: '编辑企业信息' },
+      { code: 'organization:delete', name: '删除企业', module: 'organization', description: '删除企业' },
+      { code: 'organization:credit:allocate', name: '分配企业学分', module: 'organization', description: '为企业分配学分' },
+
+      // 教材管理
+      { code: 'material:view', name: '查看教材', module: 'material', description: '查看教材列表' },
+      { code: 'material:create', name: '上传教材', module: 'material', description: '上传新教材' },
+      { code: 'material:edit', name: '编辑教材', module: 'material', description: '编辑教材信息' },
+      { code: 'material:delete', name: '删除教材', module: 'material', description: '删除教材' },
+
+      // 评价管理
+      { code: 'evaluation:view', name: '查看评价', module: 'evaluation', description: '查看课程评价' },
+      { code: 'evaluation:delete', name: '删除评价', module: 'evaluation', description: '删除课程评价' },
+
+      // 成就管理
+      { code: 'achievement:view', name: '查看成就', module: 'achievement', description: '查看成就记录' },
+      { code: 'achievement:issue', name: '颁发成就', module: 'achievement', description: '为学员颁发成就' },
+
+      // 结课管理
+      { code: 'completion:view', name: '查看结课申请', module: 'completion', description: '查看结课申请' },
+      { code: 'completion:review', name: '审批结课', module: 'completion', description: '审批结课申请' },
+
+      // 系统设置
+      { code: 'system:settings', name: '系统设置', module: 'system', description: '修改系统设置' },
+      { code: 'system:permissions', name: '权限管理', module: 'system', description: '管理角色权限' },
+      { code: 'system:banner', name: '轮播图管理', module: 'system', description: '管理首页轮播图' },
+
+      // 统计分析
+      { code: 'statistics:view', name: '查看统计', module: 'statistics', description: '查看统计数据' },
+      { code: 'statistics:dashboard', name: '数据看板', module: 'statistics', description: '查看数据看板' },
+    ];
+
+    log(`📝 准备创建 ${allPermissions.length} 个权限...`, 'yellow');
+
+    // 使用 upsert 创建或更新权限
+    for (const perm of allPermissions) {
+      await prisma.permission.upsert({
+        where: { code: perm.code },
+        update: {
+          name: perm.name,
+          description: perm.description,
+          module: perm.module,
+        },
+        create: perm,
+      });
     }
 
-    // 定义所有权限
-    const permissions = {
+    log(`✅ 权限基础数据创建成功！`, 'green');
+
+    // 定义角色-权限映射
+    const rolePermissionMap = {
       ADMIN: [
-        // 用户管理
-        'user:view',
-        'user:create',
-        'user:edit',
-        'user:delete',
-        'user:role',
-        'user:status',
-        // 课程管理
-        'course:view',
-        'course:create',
-        'course:edit',
-        'course:delete',
-        'course:approve',
-        'course:publish',
-        'course:assign-teacher',
-        // 章节管理
-        'chapter:view',
-        'chapter:create',
-        'chapter:edit',
-        'chapter:delete',
-        // 学分管理
-        'credit:view',
-        'credit:allocate',
-        'credit:deduct',
-        'credit:request:view',
-        'credit:request:review',
-        // 报名管理
-        'enrollment:view',
-        'enrollment:approve',
-        'enrollment:trial:view',
-        'enrollment:trial:approve',
-        'enrollment:refund:view',
-        'enrollment:refund:approve',
-        // 签到管理
-        'checkin:view',
-        'checkin:create',
-        'checkin:delete',
-        'checkin:makeup',
-        // 资讯管理
-        'news:view',
-        'news:create',
-        'news:edit',
-        'news:delete',
-        'news:publish',
-        // 活动管理
-        'activity:view',
-        'activity:create',
-        'activity:edit',
-        'activity:delete',
-        // 协会管理
-        'association:view',
-        'association:create',
-        'association:edit',
-        'association:delete',
-        // 组织管理
-        'organization:view',
-        'organization:create',
-        'organization:edit',
-        'organization:delete',
-        'organization:credit:allocate',
-        // 资料管理
-        'material:view',
-        'material:create',
-        'material:edit',
-        'material:delete',
-        // 评价管理
-        'evaluation:view',
-        'evaluation:delete',
-        // 成就管理
-        'achievement:view',
-        'achievement:issue',
-        // 课程完成管理
-        'completion:view',
-        'completion:review',
-        // 系统设置
-        'system:settings',
-        'system:permissions',
-        'system:banner',
-        // 数据统计
-        'statistics:view',
-        'statistics:dashboard',
+        'user:view', 'user:create', 'user:edit', 'user:delete', 'user:role', 'user:status',
+        'course:view', 'course:create', 'course:edit', 'course:delete', 'course:approve', 'course:publish', 'course:assign-teacher',
+        'chapter:view', 'chapter:create', 'chapter:edit', 'chapter:delete',
+        'credit:view', 'credit:allocate', 'credit:deduct', 'credit:request:view', 'credit:request:review',
+        'enrollment:view', 'enrollment:approve', 'enrollment:trial:view', 'enrollment:trial:approve', 'enrollment:refund:view', 'enrollment:refund:approve',
+        'checkin:view', 'checkin:create', 'checkin:delete', 'checkin:makeup',
+        'news:view', 'news:create', 'news:edit', 'news:delete', 'news:publish',
+        'activity:view', 'activity:create', 'activity:edit', 'activity:delete',
+        'association:view', 'association:create', 'association:edit', 'association:delete',
+        'organization:view', 'organization:create', 'organization:edit', 'organization:delete', 'organization:credit:allocate',
+        'material:view', 'material:create', 'material:edit', 'material:delete',
+        'evaluation:view', 'evaluation:delete',
+        'achievement:view', 'achievement:issue',
+        'completion:view', 'completion:review',
+        'system:settings', 'system:permissions', 'system:banner',
+        'statistics:view', 'statistics:dashboard',
       ],
       TEACHER: [
-        // 课程查看
         'course:view',
-        // 学员管理
-        'enrollment:view',
-        'enrollment:trial:view',
-        'enrollment:trial:approve',
-        // 签到管理
-        'checkin:view',
-        'checkin:create',
-        'checkin:makeup',
-        // 评价查看
+        'enrollment:view', 'enrollment:trial:view', 'enrollment:trial:approve',
+        'checkin:view', 'checkin:create', 'checkin:makeup',
         'evaluation:view',
-        // 资料管理
-        'material:view',
-        'material:create',
-        'material:edit',
-        // 成绩管理
+        'material:view', 'material:create', 'material:edit',
         'completion:view',
-        // 统计数据
         'statistics:view',
       ],
       STUDENT: [
-        // 课程浏览
         'course:view',
-        // 报名
         'enrollment:view',
-        // 签到
         'checkin:view',
-        // 评价
         'evaluation:view',
-        // 资料下载
         'material:view',
-        // 成就查看
         'achievement:view',
       ],
       STAFF: [
-        // 用户查看
         'user:view',
-        // 课程管理
-        'course:view',
-        'course:create',
-        'course:edit',
-        // 报名管理
-        'enrollment:view',
-        'enrollment:trial:view',
-        'enrollment:trial:approve',
-        // 签到管理
+        'course:view', 'course:create', 'course:edit',
+        'enrollment:view', 'enrollment:trial:view', 'enrollment:trial:approve',
         'checkin:view',
-        // 资讯管理
-        'news:view',
-        'news:create',
-        'news:edit',
-        // 活动管理
-        'activity:view',
-        'activity:create',
-        'activity:edit',
-        // 资料管理
-        'material:view',
-        'material:create',
-        'material:edit',
-        // 统计查看
+        'news:view', 'news:create', 'news:edit',
+        'activity:view', 'activity:create', 'activity:edit',
+        'material:view', 'material:create', 'material:edit',
         'statistics:view',
       ],
     };
 
-    // 创建权限记录
-    const rolePermissions = [];
-    for (const [role, perms] of Object.entries(permissions)) {
-      for (const permission of perms) {
-        rolePermissions.push({
-          role: role,
-          permission: permission,
+    log(`📝 准备分配角色权限...`, 'yellow');
+
+    // 为每个角色分配权限
+    for (const [role, permissionCodes] of Object.entries(rolePermissionMap)) {
+      for (const code of permissionCodes) {
+        // 查找权限 ID
+        const permission = await prisma.permission.findUnique({
+          where: { code },
         });
+
+        if (!permission) {
+          log(`⚠️  权限 ${code} 不存在，跳过`, 'yellow');
+          continue;
+        }
+
+        // 检查是否已存在
+        const existing = await prisma.rolePermission.findUnique({
+          where: {
+            role_permissionId: {
+              role: role,
+              permissionId: permission.id,
+            },
+          },
+        });
+
+        if (!existing) {
+          await prisma.rolePermission.create({
+            data: {
+              role: role,
+              permissionId: permission.id,
+            },
+          });
+        }
       }
     }
 
-    await prisma.rolePermission.createMany({
-      data: rolePermissions,
-      skipDuplicates: true,
-    });
+    const totalRolePermissions = await prisma.rolePermission.count();
+    log(`✅ 角色权限分配完成！共创建 ${totalRolePermissions} 条`, 'green');
 
-    log(`✅ 权限初始化成功！共创建 ${rolePermissions.length} 条权限`, 'green');
-    log(`   - ADMIN: ${permissions.ADMIN.length} 个权限`, 'yellow');
-    log(`   - TEACHER: ${permissions.TEACHER.length} 个权限`, 'yellow');
-    log(`   - STUDENT: ${permissions.STUDENT.length} 个权限`, 'yellow');
-    log(`   - STAFF: ${permissions.STAFF.length} 个权限`, 'yellow');
+    return true;
   } catch (error) {
     log(`❌ 权限初始化失败: ${error.message}`, 'red');
+    console.error(error);
     throw error;
   }
 }
@@ -268,26 +296,29 @@ async function seedSystemConfig() {
   log('\n⚙️  初始化系统配置...', 'blue');
 
   try {
-    // 检查是否已有配置
     const existing = await prisma.systemConfig.findFirst();
     if (existing) {
       log(`✅ 系统配置已存在`, 'green');
-      return;
+      return existing;
     }
 
-    // 创建默认配置
-    await prisma.systemConfig.create({
+    const config = await prisma.systemConfig.create({
       data: {
         appName: '北大汇丰EDP',
-        appDesc: '北京大学汇丰商学院高层管理教育项目',
-        contactPhone: '0755-26032121',
+        appLogo: '/uploads/images/default-logo.png',
+        appDesc: '北大汇丰EDP项目，致力于培养具有全球视野和创新精神的商业领袖。',
+        contactPhone: '0755-26033000',
         contactEmail: 'edp@phbs.pku.edu.cn',
-        contactAddress: '广东省深圳市南山区西丽大学城北京大学汇丰商学院',
+        contactAddress: '深圳市南山区大学城北大汇丰商学院',
         isMaintenance: false,
+        maintenanceMsg: '系统维护中，请稍后访问。',
+        wechatQrCode: '/uploads/images/default-wechat-qrcode.png',
+        weiboUrl: 'https://weibo.com/phbsedp',
       },
     });
 
-    log(`✅ 系统配置初始化成功`, 'green');
+    log(`✅ 系统配置创建成功`, 'green');
+    return config;
   } catch (error) {
     log(`❌ 系统配置初始化失败: ${error.message}`, 'red');
     throw error;
@@ -298,8 +329,8 @@ async function seedSystemConfig() {
  * 主函数
  */
 async function main() {
-  log('\n========================================', 'blue');
-  log('🚀 开始初始化生产环境数据...', 'blue');
+  log('========================================', 'blue');
+  log('🚀 开始初始化生产环境数据', 'blue');
   log('========================================', 'blue');
 
   try {
@@ -315,22 +346,25 @@ async function main() {
     log('\n========================================', 'green');
     log('🎉 初始化完成！', 'green');
     log('========================================', 'green');
-    log('\n📋 管理员登录信息：', 'yellow');
+    log('\n📌 管理员登录信息：', 'yellow');
     log('   账号: 13800138000', 'yellow');
     log('   密码: admin123456', 'yellow');
-    log('   登录地址: http://your-domain/login', 'yellow');
-    log('\n⚠️  请及时修改默认密码！\n', 'red');
+    log('\n⚠️  请尽快登录并修改默认密码！', 'red');
+
+    process.exit(0);
   } catch (error) {
     log('\n========================================', 'red');
     log('❌ 初始化失败！', 'red');
     log('========================================', 'red');
-    log(`错误: ${error.message}`, 'red');
+    log(`\n错误: ${error.message}`, 'red');
+    if (error.stack) {
+      log(`\n堆栈: ${error.stack}`, 'red');
+    }
     process.exit(1);
   } finally {
     await prisma.$disconnect();
   }
 }
 
-// 执行
+// 执行主函数
 main();
-
