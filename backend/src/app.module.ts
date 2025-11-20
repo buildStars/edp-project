@@ -45,6 +45,9 @@ import { SystemSettingsModule } from './modules/system-settings/system-settings.
 import { LoggerMiddleware } from './common/middleware/logger.middleware';
 import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
 
+// Controllers
+import { HealthController } from './health.controller';
+
 @Module({
   imports: [
     // 配置模块
@@ -102,6 +105,7 @@ import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
     AiReportsModule,
     SystemSettingsModule,
   ],
+  controllers: [HealthController],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
