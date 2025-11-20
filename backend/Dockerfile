@@ -41,14 +41,13 @@ COPY prisma ./prisma/
 RUN npm config set registry https://registry.npmmirror.com && \
     npm install --omit=dev --legacy-peer-deps --network-timeout=600000
 
-# 安装 prisma CLI（用于生成 Client 和数据库迁移）
+# 安装 prisma CLI（仅用于数据库迁移，不用于生成 Client）
 RUN npm install prisma@5.8.0 --legacy-peer-deps --network-timeout=600000
 
-# 生成 Prisma Client（使用刚安装的版本）
-RUN node_modules/.bin/prisma generate
-
-# 从构建阶段复制编译后的代码
+# 从构建阶段复制编译后的代码和已生成的 Prisma Client
 COPY --from=build /app/dist ./dist
+COPY --from=build /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=build /app/node_modules/@prisma/client ./node_modules/@prisma/client
 
 # 创建 uploads 目录
 RUN mkdir -p uploads
