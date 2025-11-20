@@ -1,6 +1,9 @@
 # 构建阶段：编译 Nest + 生成 Prisma Client
 FROM node:18-alpine AS build
 
+# 安装 OpenSSL 兼容库（Prisma 需要）
+RUN apk add --no-cache openssl1.1-compat
+
 WORKDIR /app
 
 # 复制依赖配置
@@ -22,6 +25,9 @@ RUN npm run build
 
 # 运行阶段
 FROM node:18-alpine
+
+# 安装 OpenSSL 兼容库（Prisma 需要）
+RUN apk add --no-cache openssl1.1-compat
 
 WORKDIR /app
 
