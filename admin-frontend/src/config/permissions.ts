@@ -23,7 +23,7 @@ export const menuConfig: MenuItem[] = [
     name: 'Dashboard',
     title: '首页概览',
     icon: 'DataLine',
-    permission: 'dashboard:view',
+    permission: 'statistics:dashboard', // 改为后端返回的权限代码
   },
   {
     path: '/news',
@@ -46,20 +46,20 @@ export const menuConfig: MenuItem[] = [
     name: 'Associations',
     title: '校友生活',
     icon: 'UserFilled',
-    permission: 'associations:view',
+    permission: 'association:view', // 改为后端返回的权限代码
     hideForRoles: ['TEACHER'], // 教师不显示
     children: [
       {
         path: '/associations/list',
         name: 'AssociationsList',
         title: '协会列表',
-        permission: 'associations:view',
+        permission: 'association:view', // 改为后端返回的权限代码
       },
       {
         path: '/associations/activities',
         name: 'Activities',
         title: '活动列表',
-        permission: 'activities:view',
+        permission: 'activity:view', // 改为后端返回的权限代码
       },
     ],
   },
@@ -68,20 +68,20 @@ export const menuConfig: MenuItem[] = [
     name: 'Courses',
     title: '课程管理',
     icon: 'Reading',
-    permission: 'courses:view',
+    permission: 'course:view', // 改为后端返回的权限代码
     hideForRoles: ['TEACHER'], // 教师使用"我的课程"代替
     children: [
       {
         path: '/courses/list',
         name: 'CoursesList',
         title: '课程列表',
-        permission: 'courses:view',
+        permission: 'course:view', // 改为后端返回的权限代码
       },
       {
         path: '/courses/chapters',
         name: 'ChaptersList',
         title: '章节管理',
-        permission: 'chapters:view',
+        permission: 'chapter:view', // 改为后端返回的权限代码
       },
     ],
   },
@@ -90,20 +90,20 @@ export const menuConfig: MenuItem[] = [
     name: 'Users',
     title: '用户管理',
     icon: 'User',
-    permission: 'users:view',
+    permission: 'user:view', // 改为后端返回的权限代码
     // 教师也可以查看用户管理，用于创建和编辑学员
     children: [
       {
         path: '/users/list',
         name: 'UsersList',
         title: '用户列表',
-        permission: 'users:view',
+        permission: 'user:view', // 改为后端返回的权限代码
       },
       {
         path: '/users/advisors',
         name: 'AdvisorsList',
         title: '课程顾问',
-        permission: 'advisors:view',
+        permission: 'teacher_student:view', // 改为后端返回的权限代码
       },
     ],
   },
@@ -112,13 +112,13 @@ export const menuConfig: MenuItem[] = [
     name: 'Organizations',
     title: '企业管理',
     icon: 'OfficeBuilding',
-    permission: 'organizations:view',
+    permission: 'organization:view', // 改为后端返回的权限代码
     children: [
       {
         path: '/organizations/list',
         name: 'OrganizationsList',
         title: '企业列表',
-        permission: 'organizations:view',
+        permission: 'organization:view', // 改为后端返回的权限代码
       },
     ],
   },
@@ -127,43 +127,43 @@ export const menuConfig: MenuItem[] = [
     name: 'Enrollments',
     title: '报名管理',
     icon: 'Tickets',
-    permission: 'enrollments:view',
+    permission: 'enrollment:view', // 改为后端返回的权限代码
     children: [
       {
         path: '/enrollments/list',
         name: 'EnrollmentsList',
         title: '报名列表',
-        permission: 'enrollments:view',
+        permission: 'enrollment:view', // 改为后端返回的权限代码
       },
       {
         path: '/enrollments/trials',
         name: 'Trials',
         title: '试听申请',
-        permission: 'enrollments:trials',
+        permission: 'enrollment:trial:view', // 改为后端返回的权限代码
       },
       {
         path: '/enrollments/refund-requests',
         name: 'RefundRequests',
         title: '退课申请',
-        permission: 'enrollments:refunds',
+        permission: 'enrollment:refund:view', // 改为后端返回的权限代码
       },
       {
         path: '/enrollments/credit-requests',
         name: 'CreditRequests',
         title: '学分申请审批',
-        permission: 'credit-requests:review',
+        permission: 'credit:request:review', // 改为后端返回的权限代码
       },
       {
         path: '/enrollments/course-gifts',
         name: 'CourseGifts',
         title: '赠送记录',
-        permission: 'enrollments:gifts',
+        permission: 'course_gift:view', // 改为后端返回的权限代码
       },
       {
         path: '/enrollments/evaluations',
         name: 'Evaluations',
         title: '评价管理',
-        permission: 'enrollments:evaluation',
+        permission: 'evaluation:view', // 改为后端返回的权限代码
         hideForRoles: ['TEACHER'],
       },
     ],
@@ -173,14 +173,14 @@ export const menuConfig: MenuItem[] = [
     name: 'Courseware',
     title: '课件管理',
     icon: 'FolderOpened',
-    permission: 'courseware:view',
+    permission: 'material:view', // 改为后端返回的权限代码
     hideForRoles: ['TEACHER'], // 教师在自己课程中管理课件
     children: [
       {
         path: '/courseware/list',
         name: 'CoursewareList',
         title: '课件列表',
-        permission: 'courseware:view',
+        permission: 'material:view', // 改为后端返回的权限代码
       },
     ],
   },
@@ -189,26 +189,26 @@ export const menuConfig: MenuItem[] = [
     name: 'Settings',
     title: '系统设置',
     icon: 'Setting',
-    permission: 'settings:view',
+    permission: 'system:settings', // 改为后端返回的权限代码
     hideForRoles: ['TEACHER'], // 教师不显示系统设置
     children: [
       {
         path: '/settings/basic',
         name: 'BasicSettings',
         title: '基础设置',
-        permission: 'settings:view',
+        permission: 'system:settings', // 改为后端返回的权限代码
       },
       {
         path: '/settings/roles',
         name: 'RoleSettings',
         title: '角色权限',
-        permission: 'settings:roles',
+        permission: 'system:permissions', // 改为后端返回的权限代码
       },
       {
         path: '/settings/ai-config',
         name: 'AiConfig',
         title: 'AI 配置',
-        permission: 'settings:view',
+        permission: 'ai:config:view', // 改为后端返回的权限代码
       },
     ],
   },
@@ -217,31 +217,31 @@ export const menuConfig: MenuItem[] = [
     name: 'Teacher',
     title: '教学管理',
     icon: 'Reading',
-    permission: 'my-courses:view',
+    permission: 'course:view', // 改为后端返回的权限代码（教师有 course:view 权限）
     children: [
       {
         path: '/teacher/courses',
         name: 'TeacherCourses',
         title: '我的课程',
-        permission: 'my-courses:view',
+        permission: 'course:view', // 改为后端返回的权限代码
       },
       {
         path: '/teacher/students',
         name: 'TeacherStudents',
         title: '我的学员',
-        permission: 'my-students:view',
+        permission: 'teacher_student:view', // 改为后端返回的权限代码
       },
       {
         path: '/teacher/credit-requests',
         name: 'TeacherCreditRequests',
         title: '学分申请',
-        permission: 'credit-requests:view',
+        permission: 'credit:request:view', // 改为后端返回的权限代码
       },
       {
         path: '/teacher/completion-requests',
         name: 'TeacherCompletionRequests',
         title: '结课申请',
-        permission: 'completion:view',
+        permission: 'completion:view', // 改为后端返回的权限代码
       },
     ],
   },
