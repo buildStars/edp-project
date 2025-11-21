@@ -734,15 +734,35 @@ model CourseEvaluation {
   userId      String
   enrollmentId String? // 关联的报名记录
   
-  // 评分（1-5星）
-  rating      Int      // 评分（1-5）
+  // 总评分（1-10分，自动计算平均值）
+  rating      Int      @default(0)
   
-  // 评价维度（可选）
+  // 1. 教学态度（1-10分）
+  attitude1   Int?     @default(0)  // 老师教学投入、有激情
+  attitude2   Int?     @default(0)  // 老师教学认真、耐心、诚恳、友好
+  
+  // 2. 教学内容（1-10分）
+  content1    Int?     @default(0)  // 课程主题明晰，内容清晰，论证严密
+  content2    Int?     @default(0)  // 课程内容实践性强，案例丰富
+  
+  // 3. 教学方法（1-10分）
+  method1     Int?     @default(0)  // 教学方法得当：逻辑性强，条理清晰，重点突出
+  method2     Int?     @default(0)  // 教学对问题的阐析性强
+  
+  // 4. 教学效果（1-10分）
+  effect1     Int?     @default(0)  // 达到预期要求，学习有效，对工作或成长提供帮助
+  effect2     Int?     @default(0)  // 学习了掌握新思想或新技能
+  
+  // 5. 教务组织（1-10分）
+  organization Int?    @default(0)  // 教学课程资料准备充分
+  
+  // 文本建议
+  suggestion  String?  @db.Text     // 您对本次课程的建议
+  
+  // 废弃字段（保留以兼容旧数据）
   contentRating    Int?  // 内容质量评分（1-5）
   teacherRating    Int?  // 讲师评分（1-5）
   organizationRating Int? // 组织评分（1-5）
-  
-  // 评价内容
   comment     String?  @db.Text // 评价内容
   
   createdAt   DateTime @default(now())

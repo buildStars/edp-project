@@ -95,7 +95,7 @@ export const useAuthStore = defineStore(
     persist: {
       key: 'edp-admin-auth',
       storage: localStorage,
-      paths: ['token', 'userInfo'],
+      paths: ['token', 'userInfo', 'permissions'], // 添加 permissions 到持久化配置
     },
   }
 )

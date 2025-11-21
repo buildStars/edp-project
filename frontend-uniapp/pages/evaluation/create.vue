@@ -13,41 +13,79 @@
     <view class="evaluation-form">
       <view class="form-title">{{ viewMode ? '我的评价' : '课程评价' }}</view>
       
-      <!-- 总体评分（必填） -->
-      <view class="form-item">
-        <view class="item-header">
-          <text class="item-label">总体评价</text>
-          <text v-if="!viewMode" class="item-required">*</text>
+      <!-- 1. 教学态度 -->
+      <view class="form-section">
+        <view class="section-title">教学态度</view>
+        <view class="rating-item">
+          <view class="item-desc">老师教学投入、有激情</view>
+          <rating-star v-model="form.attitude1" :disabled="viewMode" size="small" />
         </view>
-        <rating-star v-model="form.rating" @change="handleRatingChange" :disabled="viewMode" />
-        <text class="rating-text">{{ getRatingText(form.rating) }}</text>
+        <view class="rating-item">
+          <view class="item-desc">老师教学认真、耐心、诚恳、友好</view>
+          <rating-star v-model="form.attitude2" :disabled="viewMode" size="small" />
+        </view>
       </view>
-      
-      <!-- 内容质量（可选） -->
-      <view class="form-item">
-        <view class="item-header">
-          <text class="item-label">内容质量</text>
-          <text v-if="!viewMode" class="item-optional">选填</text>
+
+      <!-- 2. 教学内容 -->
+      <view class="form-section">
+        <view class="section-title">教学内容</view>
+        <view class="rating-item">
+          <view class="item-desc">课程主题明晰，内容清晰，论证严密</view>
+          <rating-star v-model="form.content1" :disabled="viewMode" size="small" />
         </view>
-        <rating-star v-model="form.contentRating" :disabled="viewMode" />
+        <view class="rating-item">
+          <view class="item-desc">课程内容实践性强，案例丰富</view>
+          <rating-star v-model="form.content2" :disabled="viewMode" size="small" />
+        </view>
       </view>
-      
-      <!-- 讲师水平（可选） -->
-      <view class="form-item">
-        <view class="item-header">
-          <text class="item-label">讲师水平</text>
-          <text v-if="!viewMode" class="item-optional">选填</text>
+
+      <!-- 3. 教学方法 -->
+      <view class="form-section">
+        <view class="section-title">教学方法</view>
+        <view class="rating-item">
+          <view class="item-desc">教学方法得当：逻辑性强，条理清晰，重点突出</view>
+          <rating-star v-model="form.method1" :disabled="viewMode" size="small" />
         </view>
-        <rating-star v-model="form.teacherRating" :disabled="viewMode" />
+        <view class="rating-item">
+          <view class="item-desc">教学对问题的阐析性强</view>
+          <rating-star v-model="form.method2" :disabled="viewMode" size="small" />
+        </view>
       </view>
-      
-      <!-- 组织服务（可选） -->
-      <view class="form-item">
-        <view class="item-header">
-          <text class="item-label">组织服务</text>
-          <text v-if="!viewMode" class="item-optional">选填</text>
+
+      <!-- 4. 教学效果 -->
+      <view class="form-section">
+        <view class="section-title">教学效果</view>
+        <view class="rating-item">
+          <view class="item-desc">达到预期要求，学习有效，对工作或成长提供帮助</view>
+          <rating-star v-model="form.effect1" :disabled="viewMode" size="small" />
         </view>
-        <rating-star v-model="form.organizationRating" :disabled="viewMode" />
+        <view class="rating-item">
+          <view class="item-desc">学习了掌握新思想或新技能</view>
+          <rating-star v-model="form.effect2" :disabled="viewMode" size="small" />
+        </view>
+      </view>
+
+      <!-- 5. 教务组织 -->
+      <view class="form-section">
+        <view class="section-title">教务组织</view>
+        <view class="rating-item">
+          <view class="item-desc">教学课程资料准备充分</view>
+          <rating-star v-model="form.organization" :disabled="viewMode" size="small" />
+        </view>
+      </view>
+
+      <!-- 6. 文本建议 -->
+      <view class="form-section">
+        <view class="section-title">您对本次课程的建议</view>
+        <textarea 
+          v-model="form.suggestion"
+          :disabled="viewMode"
+          class="suggestion-input"
+          placeholder="请输入您的建议和意见（选填）"
+          maxlength="500"
+          :show-confirm-bar="false"
+        />
+        <view class="char-count">{{ form.suggestion.length }}/500</view>
       </view>
     </view>
     
@@ -56,7 +94,7 @@
       <view class="tip-title">温馨提示</view>
       <view class="tip-item">
         <text class="icon">⭐</text>
-        <text class="text">您的评价将帮助我们改进课程质量</text>
+        <text class="text">每项评价满分10分，您的评价将帮助我们改进课程质量</text>
       </view>
       <view class="tip-item">
         <text class="icon">📄</text>
@@ -85,9 +123,9 @@ import { createEvaluation, getMyCourseEvaluation } from '@/api/evaluation'
 import RatingStar from '@/components/rating-star/rating-star.vue'
 
 const courseId = ref('')
-const chapterId = ref('') // 章节ID（可选）
-const viewMode = ref(false) // 查看模式（true=查看已有评价，false=创建新评价）
-const evaluationId = ref('') // 评价ID（查看模式时使用）
+const chapterId = ref('')
+const viewMode = ref(false)
+const evaluationId = ref('')
 
 const course = ref({
   title: '',
@@ -96,23 +134,44 @@ const course = ref({
 })
 
 const form = ref({
-  rating: 0,
-  contentRating: 0,
-  teacherRating: 0,
-  organizationRating: 0
+  // 教学态度
+  attitude1: 0,
+  attitude2: 0,
+  // 教学内容
+  content1: 0,
+  content2: 0,
+  // 教学方法
+  method1: 0,
+  method2: 0,
+  // 教学效果
+  effect1: 0,
+  effect2: 0,
+  // 教务组织
+  organization: 0,
+  // 文本建议
+  suggestion: ''
 })
 
 const submitting = ref(false)
 
+// 检查是否可以提交（至少有一项评分）
 const canSubmit = computed(() => {
-  return form.value.rating > 0
+  return form.value.attitude1 > 0 || 
+         form.value.attitude2 > 0 || 
+         form.value.content1 > 0 || 
+         form.value.content2 > 0 || 
+         form.value.method1 > 0 || 
+         form.value.method2 > 0 || 
+         form.value.effect1 > 0 || 
+         form.value.effect2 > 0 || 
+         form.value.organization > 0
 })
 
 // 页面加载
 onLoad(async (options) => {
   courseId.value = options.courseId
-  chapterId.value = options.chapterId || '' // 获取章节ID（如果有）
-  viewMode.value = options.viewMode === 'true' || options.viewMode === true // 查看模式
+  chapterId.value = options.chapterId || ''
+  viewMode.value = options.viewMode === 'true' || options.viewMode === true
   
   console.log('📝 评价页面参数:', { 
     courseId: courseId.value, 
@@ -122,7 +181,6 @@ onLoad(async (options) => {
   
   await loadCourseDetail()
   
-  // 如果是查看模式，加载已有的评价
   if (viewMode.value) {
     await loadMyEvaluation()
   }
@@ -149,27 +207,24 @@ const loadMyEvaluation = async () => {
   try {
     uni.showLoading({ title: '加载评价...' })
     
-    // 传递章节ID（如果有）
     const chapterIdParam = chapterId.value && chapterId.value.trim() !== '' ? chapterId.value : null
-    console.log('🔍 查询评价 - courseId:', courseId.value, ', chapterId:', chapterIdParam)
-    
     const data = await getMyCourseEvaluation(courseId.value, chapterIdParam)
-    
-    console.log('📖 加载的评价数据:', data)
     
     if (data) {
       // 填充表单数据
-      form.value.rating = data.rating || 0
-      form.value.contentRating = data.contentRating || 0
-      form.value.teacherRating = data.teacherRating || 0
-      form.value.organizationRating = data.organizationRating || 0
+      form.value = {
+        attitude1: data.attitude1 || 0,
+        attitude2: data.attitude2 || 0,
+        content1: data.content1 || 0,
+        content2: data.content2 || 0,
+        method1: data.method1 || 0,
+        method2: data.method2 || 0,
+        effect1: data.effect1 || 0,
+        effect2: data.effect2 || 0,
+        organization: data.organization || 0,
+        suggestion: data.suggestion || ''
+      }
       evaluationId.value = data.id
-    } else {
-      console.warn('⚠️ 未找到评价数据')
-      uni.showToast({
-        title: '未找到评价记录',
-        icon: 'none'
-      })
     }
   } catch (error) {
     console.error('❌ 加载评价失败:', error)
@@ -182,32 +237,11 @@ const loadMyEvaluation = async () => {
   }
 }
 
-// 评分改变
-const handleRatingChange = (value) => {
-  // 可以添加震动反馈
-  if (value > 0) {
-    uni.vibrateShort()
-  }
-}
-
-// 获取评分文字
-const getRatingText = (rating) => {
-  const texts = {
-    5: '非常满意',
-    4: '比较满意',
-    3: '一般',
-    2: '不太满意',
-    1: '很不满意',
-    0: '请点击星星评分'
-  }
-  return texts[rating] || ''
-}
-
 // 提交评价
 const handleSubmit = async () => {
   if (!canSubmit.value) {
     uni.showToast({
-      title: '请先进行总体评价',
+      title: '请至少完成一项评价',
       icon: 'none'
     })
     return
@@ -216,28 +250,40 @@ const handleSubmit = async () => {
   try {
     submitting.value = true
     
+    // 计算总分（所有项的平均分）
+    const scores = [
+      form.value.attitude1,
+      form.value.attitude2,
+      form.value.content1,
+      form.value.content2,
+      form.value.method1,
+      form.value.method2,
+      form.value.effect1,
+      form.value.effect2,
+      form.value.organization
+    ].filter(score => score > 0)
+    
+    const totalScore = scores.length > 0 
+      ? Math.round(scores.reduce((sum, score) => sum + score, 0) / scores.length) 
+      : 0
+    
     const data = {
       courseId: courseId.value,
-      rating: form.value.rating
+      rating: totalScore, // 总评分（1-10分）
+      attitude1: form.value.attitude1,
+      attitude2: form.value.attitude2,
+      content1: form.value.content1,
+      content2: form.value.content2,
+      method1: form.value.method1,
+      method2: form.value.method2,
+      effect1: form.value.effect1,
+      effect2: form.value.effect2,
+      organization: form.value.organization,
+      suggestion: form.value.suggestion
     }
     
-    // 如果是章节评价，添加章节ID
     if (chapterId.value) {
       data.chapterId = chapterId.value
-      console.log('📝 提交章节评价，chapterId:', chapterId.value)
-    } else {
-      console.log('📝 提交课程评价')
-    }
-    
-    // 添加可选评分
-    if (form.value.contentRating > 0) {
-      data.contentRating = form.value.contentRating
-    }
-    if (form.value.teacherRating > 0) {
-      data.teacherRating = form.value.teacherRating
-    }
-    if (form.value.organizationRating > 0) {
-      data.organizationRating = form.value.organizationRating
     }
     
     console.log('📝 提交评价数据:', data)
@@ -249,12 +295,9 @@ const handleSubmit = async () => {
       duration: 2000
     })
     
-    // 延迟跳转，让用户看到成功提示
     setTimeout(() => {
-      // 返回课程详情页并刷新
       uni.navigateBack({
         success: () => {
-          // 通知课程详情页刷新
           uni.$emit('evaluationSubmitted')
         }
       })
@@ -279,7 +322,7 @@ const handleCancel = () => {
 .page {
   min-height: 100vh;
   background: #F5F7FA;
-  padding-bottom: env(safe-area-inset-bottom);
+  padding-bottom: calc(120rpx + env(safe-area-inset-bottom));
 }
 
 // 课程卡片
@@ -332,49 +375,74 @@ const handleCancel = () => {
     font-weight: 600;
     color: #333;
     margin-bottom: 32rpx;
+    text-align: center;
   }
   
-  .form-item {
-    margin-bottom: 48rpx;
+  .form-section {
+    margin-bottom: 40rpx;
+    padding-bottom: 32rpx;
+    border-bottom: 2rpx solid #F0F0F0;
     
     &:last-child {
+      border-bottom: none;
       margin-bottom: 0;
     }
     
-    .item-header {
-      display: flex;
-      align-items: center;
-      gap: 8rpx;
+    .section-title {
+      font-size: 30rpx;
+      font-weight: 600;
+      color: #333;
       margin-bottom: 24rpx;
-      
-      .item-label {
-        font-size: 30rpx;
-        color: #333;
-        font-weight: 500;
-      }
-      
-      .item-required {
-        color: #FF4D4F;
-        font-size: 28rpx;
-      }
-      
-      .item-optional {
-        font-size: 24rpx;
-        color: #999;
-        background: #F5F5F5;
-        padding: 2rpx 12rpx;
-        border-radius: 8rpx;
-      }
+      padding-left: 16rpx;
+      border-left: 6rpx solid #C8161D;
     }
     
-    .rating-text {
-      display: block;
-      margin-top: 16rpx;
-      font-size: 26rpx;
-      color: #FFB400;
-      font-weight: 500;
+    .rating-item {
+      margin-bottom: 32rpx;
+      
+      &:last-child {
+        margin-bottom: 0;
+      }
+      
+      .item-desc {
+        font-size: 28rpx;
+        color: #666;
+        line-height: 1.6;
+        margin-bottom: 16rpx;
+      }
     }
   }
+}
+
+// 文本建议输入框
+.suggestion-input {
+  width: 100%;
+  min-height: 200rpx;
+  padding: 20rpx;
+  background: #F5F7FA;
+  border-radius: 12rpx;
+  font-size: 28rpx;
+  color: #333;
+  line-height: 1.6;
+  border: 2rpx solid #E5E5E5;
+  box-sizing: border-box;
+  
+  &:focus {
+    border-color: #C8161D;
+    background: #fff;
+  }
+  
+  &:disabled {
+    background: #F5F5F5;
+    color: #999;
+  }
+}
+
+.char-count {
+  text-align: right;
+  font-size: 24rpx;
+  color: #999;
+  margin-top: 12rpx;
 }
 
 // 提示说明
@@ -428,6 +496,7 @@ const handleCancel = () => {
   box-shadow: 0 -4rpx 16rpx rgba(0, 0, 0, 0.08);
   display: flex;
   gap: 24rpx;
+  z-index: 100;
   
   button {
     flex: 1;
@@ -451,7 +520,7 @@ const handleCancel = () => {
     }
     
     &.btn-submit {
-      background: linear-gradient(135deg, #FFB400 0%, #FF9800 100%);
+      background: linear-gradient(135deg, #C8161D 0%, #FF4757 100%);
       color: #fff;
       border: none;
       
@@ -463,5 +532,3 @@ const handleCancel = () => {
   }
 }
 </style>
-
-

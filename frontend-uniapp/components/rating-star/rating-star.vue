@@ -1,5 +1,5 @@
 <template>
-  <view class="rating-star">
+  <view class="rating-star" :class="[`size-${size}`]">
     <view 
       v-for="(star, index) in stars" 
       :key="index" 
@@ -24,8 +24,8 @@ const props = defineProps({
     default: 5
   },
   size: {
-    type: Number,
-    default: 60
+    type: String,
+    default: 'normal' // 'small', 'normal', 'large'
   },
   disabled: {
     type: Boolean,
@@ -50,7 +50,7 @@ const handleClick = (value) => {
 .rating-star {
   display: flex;
   align-items: center;
-  gap: 16rpx;
+  gap: 12rpx;
   
   .star-item {
     cursor: pointer;
@@ -67,6 +67,33 @@ const handleClick = (value) => {
     
     &:active .star-icon {
       transform: scale(1.2);
+    }
+  }
+  
+  // 小尺寸
+  &.size-small {
+    gap: 8rpx;
+    
+    .star-icon {
+      font-size: 40rpx;
+    }
+  }
+  
+  // 普通尺寸
+  &.size-normal {
+    gap: 12rpx;
+    
+    .star-icon {
+      font-size: 60rpx;
+    }
+  }
+  
+  // 大尺寸
+  &.size-large {
+    gap: 16rpx;
+    
+    .star-icon {
+      font-size: 80rpx;
     }
   }
 }
