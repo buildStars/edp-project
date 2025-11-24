@@ -29,10 +29,12 @@ async function bootstrap() {
   // 启用CORS - 允许跨域请求
   app.enableCors({
     origin: [
-      'http://localhost:5173',  // Vite 开发服务器
-      'http://localhost:8080',  // uni-app H5 开发服务器
+      'http://localhost:5173',      // Vite 开发服务器
+      'http://localhost:8080',      // uni-app H5 开发服务器
       'http://127.0.0.1:5173',
       'http://127.0.0.1:8080',
+      'http://192.168.0.76',        // 生产环境 - 前端容器
+      'http://192.168.0.76:8080',   // 生产环境 - 前端容器直接访问
     ],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
