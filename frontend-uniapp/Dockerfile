@@ -6,9 +6,8 @@ WORKDIR /app
 # 复制依赖配置
 COPY package*.json ./
 
-# 配置npm镜像源并安装依赖
-RUN npm config set registry https://registry.npmmirror.com && \
-    npm install --legacy-peer-deps --network-timeout=600000
+# 安装依赖（使用官方npm源，uni-app特定版本在淘宝镜像中可能不存在）
+RUN npm install --legacy-peer-deps --network-timeout=600000
 
 # 复制源代码
 COPY . .
