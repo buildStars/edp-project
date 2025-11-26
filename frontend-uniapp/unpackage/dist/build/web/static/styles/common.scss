@@ -1,0 +1,36 @@
+/* 全局公共样式 */
+
+/* 主题颜色变量 */
+$primary-color: #C8161D;
+$text-color-primary: #333333;
+$text-color-secondary: #666666;
+$text-color-placeholder: #999999;
+$bg-color: #F8F8F8;
+$bg-color-white: #FFFFFF;
+$border-color: #E5E5E5;
+
+/* 间距变量 */
+$spacing-xs: 8rpx;
+$spacing-sm: 16rpx;
+$spacing-md: 24rpx;
+$spacing-lg: 32rpx;
+$spacing-xl: 48rpx;
+
+/* 字体大小 */
+$font-size-xs: 24rpx;
+$font-size-sm: 26rpx;
+$font-size-base: 28rpx;
+$font-size-lg: 30rpx;
+$font-size-xl: 32rpx;
+$font-size-xxl: 36rpx;
+
+/* 圆角 */
+$border-radius-sm: 4rpx;
+$border-radius-base: 8rpx;
+$border-radius-lg: 12rpx;
+$border-radius-xl: 16rpx;
+
+/* 阴影 */
+$box-shadow-light: 0 2rpx 8rpx rgba(0, 0, 0, 0.06);
+$box-shadow-base: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
+

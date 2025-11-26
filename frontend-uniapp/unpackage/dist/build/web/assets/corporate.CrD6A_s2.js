@@ -1,0 +1,1 @@
+import{J as r,K as e}from"./index-BA-OeFd4.js";function a(r){return e("/api/corporate/credits/allocate",r)}function o(r){return e("/api/corporate/credits/purchase-course",r)}function t(){return r("/api/corporate/employees")}export{a,t as g,o as p};

@@ -1,0 +1,1 @@
+import{J as e,K as n,L as r}from"./index-BA-OeFd4.js";function t(e){return n("/api/enrollment-requests",e)}function s(n){return e("/api/enrollment-requests/my",n)}function a(e){return r(`/api/enrollment-requests/${e}`)}export{a,t as c,s as g};
