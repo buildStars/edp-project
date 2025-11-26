@@ -28,14 +28,13 @@
         "title" : "北大汇丰EDP",
         "router" : {
             "mode" : "hash",
-            "base" : "/h5/"
+            "base" : "/"
         },
         "optimization" : {
             "treeShaking" : {
                 "enable" : true
             }
         },
-        "publicPath" : "/h5/",
         "template" : "index.html"
     },
     "uniStatistics" : {

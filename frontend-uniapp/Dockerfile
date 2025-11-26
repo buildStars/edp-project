@@ -21,8 +21,8 @@ FROM nginx:alpine
 
 WORKDIR /usr/share/nginx/html
 
-# 复制构建产物（uni-app H5版本输出到 dist/build/h5）
-COPY --from=build /app/dist/build/h5 ./h5
+# 复制构建产物（uni-app H5版本输出到 dist/build/h5，复制到根目录）
+COPY --from=build /app/dist/build/h5 ./
 
 # 复制Nginx配置
 COPY nginx.conf /etc/nginx/conf.d/default.conf
