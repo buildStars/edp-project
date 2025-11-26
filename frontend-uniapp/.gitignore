@@ -12,8 +12,14 @@ node_modules/
 
 # Build output
 dist/
-unpackage/
 .DS_Store
+
+# Uni-app 构建目录（开发时的输出忽略）
+unpackage/
+# 但允许H5生产构建产物（用于Docker部署）
+!unpackage/dist/
+!unpackage/dist/build/
+!unpackage/dist/build/h5/
 
 # Environment variables
 .env
@@ -31,7 +37,6 @@ unpackage/
 
 # Uni-app specific
 .hbuilderx/
-unpackage/
 
 # WeChat DevTools
 .wechat_devtools/
