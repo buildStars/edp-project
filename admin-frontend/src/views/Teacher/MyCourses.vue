@@ -351,11 +351,11 @@ const handleCreate = () => {
 }
 
 // 编辑课程
+// 编辑课程
 const handleEdit = (row: Course) => {
   router.push(`/courses/edit/${row.id}`)
 }
 
-// 查看学员
 // 查看课程详情
 const handleViewDetail = (row: Course) => {
   router.push(`/courses/edit/${row.id}`)
@@ -496,7 +496,13 @@ const handleViewEvaluations = (row: Course) => {
 
 // 课件管理
 const handleManageMaterials = (row: Course) => {
-  router.push(`/materials?courseId=${row.id}&title=${row.title}`)
+  router.push({
+    path: '/materials/list',
+    query: {
+      courseId: row.id,
+      title: row.title
+    }
+  })
 }
 
 // 学员管理

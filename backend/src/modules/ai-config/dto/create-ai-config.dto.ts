@@ -1,44 +1,50 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsBoolean, IsInt, IsNumber, IsOptional, Min, Max } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsBoolean, IsNumber, IsInt, Min, Max } from 'class-validator';
+import { Transform } from 'class-transformer';
 
 export class CreateAiConfigDto {
   @ApiProperty({ description: 'AI模型名称', example: 'GPT-4' })
   @IsString()
+  @IsNotEmpty()
   name: string;
 
   @ApiProperty({ description: '提供商', example: 'openai' })
   @IsString()
+  @IsNotEmpty()
   provider: string;
 
-  @ApiProperty({ description: 'API Key' })
+  @ApiProperty({ description: 'API Key（必填）' })
   @IsString()
+  @IsNotEmpty()
   apiKey: string;
 
-  @ApiPropertyOptional({ description: 'API地址', example: 'https://api.openai.com/v1' })
-  @IsOptional()
+  @ApiPropertyOptional({ description: 'API地址' })
   @IsString()
+  @IsOptional()
+  @Transform(({ value }) => value === '' ? undefined : value)
   apiUrl?: string;
 
   @ApiProperty({ description: '模型版本', example: 'gpt-4' })
   @IsString()
+  @IsNotEmpty()
   model: string;
 
-  @ApiPropertyOptional({ description: '是否启用', default: false })
-  @IsOptional()
+  @ApiPropertyOptional({ description: '是否启用', default: true })
   @IsBoolean()
+  @IsOptional()
   isActive?: boolean;
 
   @ApiPropertyOptional({ description: '最大token数', default: 2000 })
-  @IsOptional()
   @IsInt()
   @Min(100)
+  @Max(10000)
+  @IsOptional()
   maxTokens?: number;
 
   @ApiPropertyOptional({ description: '温度参数', default: 0.7 })
-  @IsOptional()
   @IsNumber()
   @Min(0)
   @Max(2)
+  @IsOptional()
   temperature?: number;
 }
-

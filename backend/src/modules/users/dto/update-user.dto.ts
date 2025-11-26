@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsBoolean } from 'class-validator';
+import { IsString, IsOptional, IsBoolean, MinLength } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
 export class UpdateUserDto {
@@ -36,5 +36,11 @@ export class UpdateUserDto {
   @IsOptional()
   @IsBoolean()
   profileCompleted?: boolean;
+
+  @ApiPropertyOptional({ description: '密码（留空表示不修改）', minLength: 6 })
+  @IsOptional()
+  @IsString()
+  @MinLength(6, { message: '密码至少需要6位' })
+  password?: string;
 }
 

@@ -167,6 +167,7 @@ const routes: RouteRecordRaw[] = [
               title: '创建课程',
               hidden: true,
               activeMenu: '/courses/list',
+              hideBreadcrumb: true, // 隐藏默认面包屑，使用页面自定义面包屑
             },
           },
           {
@@ -177,6 +178,7 @@ const routes: RouteRecordRaw[] = [
               title: '编辑课程',
               hidden: true,
               activeMenu: '/courses/list',
+              hideBreadcrumb: true, // 隐藏默认面包屑，使用页面自定义面包屑
             },
           },
           {
@@ -352,11 +354,22 @@ const routes: RouteRecordRaw[] = [
       {
         path: '/materials',
         name: 'Materials',
-        component: () => import('@/views/Materials/index.vue'),
+        redirect: '/materials/list',
         meta: {
           title: '课件管理',
           icon: 'FolderOpened',
         },
+        children: [
+          {
+            path: '/materials/list',
+            name: 'MaterialsList',
+            component: () => import('@/views/Materials/List.vue'),
+            meta: {
+              title: '课件列表',
+              hideBreadcrumb: true, // 使用页面自定义面包屑
+            },
+          },
+        ],
       },
       // 数据统计
       {

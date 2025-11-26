@@ -457,9 +457,21 @@ export class TeachersService {
       evaluations: evaluations.map((e) => ({
         id: e.id,
         rating: e.rating,
+        // 旧的3项评分（保留兼容性）
         contentRating: e.contentRating,
         teacherRating: e.teacherRating,
-        organizationRating: e.organizationRating,
+        // 新的9项详细评分（10分制）
+        attitude1Rating: e.attitude1,
+        attitude2Rating: e.attitude2,
+        content1Rating: e.content1,
+        content2Rating: e.content2,
+        method1Rating: e.method1,
+        method2Rating: e.method2,
+        effect1Rating: e.effect1,
+        effect2Rating: e.effect2,
+        organizationRating: e.organization, // 教务组织评分
+        // 文本建议
+        suggestion: e.suggestion,
         createdAt: e.createdAt,
         user: e.user,
       })),

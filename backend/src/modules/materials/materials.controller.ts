@@ -1,5 +1,6 @@
-import { Controller, Get, Post, Put, Delete, Body, Query, Param, UseGuards, HttpCode } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { Controller, Get, Post, Put, Delete, Body, Query, Param, UseGuards, HttpCode, UseInterceptors, UploadedFile, BadRequestException } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiConsumes, ApiBody } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { MaterialsService } from './materials.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
@@ -58,6 +59,43 @@ export class MaterialsController {
   @ApiOperation({ summary: '批量删除课件（管理端）' })
   async batchDelete(@Body() dto: { ids: string[] }) {
     return this.materialsService.batchDelete(dto.ids);
+  }
+
+  @Post('upload')
+  @HttpCode(200)
+  @UseGuards(RolesGuard)
+  @Roles('ADMIN', 'STAFF', 'TEACHER')
+  @ApiOperation({ summary: '上传课件文件' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+  })
+  @UseInterceptors(FileInterceptor('file'))
+  async upload(@UploadedFile() file: Express.Multer.File) {
+    if (!file) {
+      throw new BadRequestException('请选择要上传的文件');
+    }
+
+    // 验证文件大小（100MB）
+    const maxSize = 100 * 1024 * 1024;
+    if (file.size > maxSize) {
+      throw new BadRequestException('文件大小不能超过100MB');
+    }
+
+    const result = await this.materialsService.uploadFile(file);
+    return {
+      code: 200,
+      msg: '上传成功',
+      data: result,
+    };
   }
 
   // ========== 学员端接口 ==========

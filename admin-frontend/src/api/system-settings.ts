@@ -86,6 +86,7 @@ export interface SystemConfig {
   appName: string
   appLogo?: string
   appDesc?: string
+  aboutUs?: string
   contactPhone?: string
   contactEmail?: string
   contactAddress?: string
@@ -93,6 +94,7 @@ export interface SystemConfig {
   maintenanceMsg?: string
   wechatQrCode?: string
   weiboUrl?: string
+  appVersion?: string
   createdAt: string
   updatedAt: string
 }
@@ -101,6 +103,7 @@ export interface UpdateSystemConfigData {
   appName?: string
   appLogo?: string
   appDesc?: string
+  aboutUs?: string
   contactPhone?: string
   contactEmail?: string
   contactAddress?: string
@@ -108,26 +111,20 @@ export interface UpdateSystemConfigData {
   maintenanceMsg?: string
   wechatQrCode?: string
   weiboUrl?: string
+  appVersion?: string
 }
 
 /**
- * 获取系统配置
+ * 获取系统配置（公开接口，无需登录）
  */
 export function getSystemConfig() {
   return request.get<SystemConfig>('/system-settings/config')
 }
 
 /**
- * 更新系统配置
+ * 更新系统配置（需要管理员权限）
  */
 export function updateSystemConfig(data: UpdateSystemConfigData) {
   return request.put<SystemConfig>('/system-settings/config', data)
-}
-
-/**
- * 获取公开系统配置（无需登录）
- */
-export function getPublicSystemConfig() {
-  return request.get<Partial<SystemConfig>>('/system-settings/config/public')
 }
 

@@ -13,3 +13,8 @@ import { AiConfigModule } from '../ai-config/ai-config.module';
 export class AiReportsModule {}
 
 
+
+
+
+
+

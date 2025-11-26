@@ -215,6 +215,18 @@
         <el-form-item label="邮箱" prop="email">
           <el-input v-model="editForm.email" placeholder="请输入邮箱" />
         </el-form-item>
+        <el-form-item label="密码" prop="password">
+          <el-input 
+            v-model="editForm.password" 
+            type="password" 
+            placeholder="留空表示不修改密码" 
+            show-password 
+            clearable
+          />
+          <span style="color: #999; font-size: 12px; display: block; margin-top: 4px">
+            留空表示不修改密码，如需修改请输入新密码（至少6位）
+          </span>
+        </el-form-item>
         <el-form-item label="公司">
           <el-input v-model="editForm.company" placeholder="请输入公司" />
         </el-form-item>
@@ -533,16 +545,30 @@ const editForm = reactive({
   realName: '',
   phone: '',
   email: '',
+  password: '',
   company: '',
   position: '',
   role: 'STUDENT',
   status: 'ACTIVE',
 })
 
+// 密码验证器（可选字段，但如果填写则至少6位）
+const validateEditPassword = (rule: any, value: string, callback: any) => {
+  if (!value) {
+    // 密码为空，不修改密码，验证通过
+    callback()
+  } else if (value.length < 6) {
+    callback(new Error('密码至少需要6位'))
+  } else {
+    callback()
+  }
+}
+
 const editRules: FormRules = {
   realName: [{ required: true, message: '请输入姓名', trigger: 'blur' }],
   phone: [{ validator: validatePhone as any, trigger: 'blur' }],
   email: [{ validator: validateEmail as any, trigger: 'blur' }],
+  password: [{ validator: validateEditPassword as any, trigger: 'blur' }],
   role: [{ required: true, message: '请选择角色', trigger: 'change' }],
   status: [{ required: true, message: '请选择状态', trigger: 'change' }],
 }
@@ -553,6 +579,7 @@ const handleEdit = (row: User) => {
     realName: row.realName || '',
     phone: row.phone || '',
     email: row.email || '',
+    password: '', // 默认为空，不修改密码
     company: row.company || '',
     position: row.position || '',
     role: row.role,
@@ -568,8 +595,10 @@ const handleSaveEdit = async () => {
     await editFormRef.value.validate()
     submitting.value = true
 
-    const { id, ...data } = editForm
-    await updateUser(id, data)
+    const { id, password, ...data } = editForm
+    // 只有当密码不为空时才包含密码字段
+    const updateData = password ? { ...data, password } : data
+    await updateUser(id, updateData)
     ElMessage.success('保存成功')
     editDialogVisible.value = false
     handleSearch()

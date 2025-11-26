@@ -21,6 +21,13 @@ async function bootstrap() {
   // __dirname 在编译后是 dist/src，需要返回到项目根目录
   app.useStaticAssets(join(__dirname, '..', '..', 'uploads'), {
     prefix: '/uploads/',
+    // 添加CORS头，允许跨域访问静态资源
+    setHeaders: (res) => {
+      res.set('Access-Control-Allow-Origin', '*');
+      res.set('Access-Control-Allow-Methods', 'GET');
+      res.set('Access-Control-Allow-Headers', 'Content-Type');
+      res.set('Cache-Control', 'public, max-age=31536000');
+    },
   });
 
   // 全局前缀

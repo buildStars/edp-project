@@ -277,25 +277,45 @@ export class CheckinService {
    * 获取活跃签到会话（学员端）
    */
   async getActiveSession(courseId: string, userId: string) {
+    const now = new Date();
+    this.logger.log(`[查询活跃签到] courseId: ${courseId}, userId: ${userId}, 当前时间: ${now.toISOString()}`);
+    
+    // 先查询所有该课程的签到会话（用于调试）
+    const allSessions = await this.prisma.checkinSession.findMany({
+      where: { courseId },
+      orderBy: { createdAt: 'desc' },
+      take: 5,
+    });
+    
+    this.logger.log(`[所有签到会话] 课程 ${courseId} 共 ${allSessions.length} 条:`);
+    allSessions.forEach(s => {
+      const isExpired = s.endTime < now;
+      this.logger.log(`  - sessionId: ${s.id}, isActive: ${s.isActive}, endTime: ${s.endTime.toISOString()}, code: ${s.code}, ${isExpired ? '已过期' : '未过期'}`);
+    });
+    
     const session = await this.prisma.checkinSession.findFirst({
       where: {
         courseId,
         isActive: true,
-        endTime: { gt: new Date() },
+        endTime: { gt: now },
       },
       select: {
         id: true,
         endTime: true,
+        chapterId: true,
       },
     });
 
     if (!session) {
+      this.logger.warn(`[查询活跃签到] 未找到活跃签到会话`);
       return {
         hasActiveSession: false,
         canCheckin: false,
         alreadyCheckedIn: false,
       };
     }
+    
+    this.logger.log(`[查询活跃签到] 找到活跃会话 sessionId: ${session.id}, endTime: ${session.endTime.toISOString()}, chapterId: ${session.chapterId || 'null'}`);
 
     // 检查是否已报名
     const enrollment = await this.prisma.enrollment.findFirst({
@@ -803,68 +823,116 @@ export class CheckinService {
    * 获取学生自己的签到记录
    */
   async getMyCheckinRecords(userId: string, courseId?: string, chapterId?: string) {
-    this.logger.log(`[获取我的签到记录] userId: ${userId}, courseId: ${courseId}, chapterId: ${chapterId}`);
+    this.logger.log(`[获取我的签到记录（含缺勤）] userId: ${userId}, courseId: ${courseId}, chapterId: ${chapterId}`);
 
-    const where: any = {
-      userId,
-    };
+    // 1. 获取用户已报名的课程ID列表
+    const enrollments = await this.prisma.enrollment.findMany({
+      where: {
+        userId,
+        status: 'ENROLLED',
+        ...(courseId ? { courseId } : {}),
+      },
+      select: {
+        courseId: true,
+      },
+    });
 
-    // 如果指定了课程ID
-    if (courseId) {
-      where.session = {
-        courseId,
-        ...(chapterId ? { chapterId } : {}),
+    const enrolledCourseIds = enrollments.map(e => e.courseId);
+
+    if (enrolledCourseIds.length === 0) {
+      return {
+        summary: {
+          totalSessions: 0,
+          totalCheckins: 0,
+          onTimeCheckins: 0,
+          lateCheckins: 0,
+          missedCheckins: 0,
+        },
+        records: [],
       };
     }
 
-    // 获取签到记录
-    const checkins = await this.prisma.checkin.findMany({
-      where,
+    // 2. 获取这些课程的所有已结束的签到会话
+    const sessions = await this.prisma.checkinSession.findMany({
+      where: {
+        courseId: { in: enrolledCourseIds },
+        isActive: false, // 只统计已结束的签到会话
+        ...(chapterId ? { chapterId } : {}),
+      },
       include: {
-        session: {
-          include: {
-            course: {
-              select: {
-                id: true,
-                title: true,
-                coverImage: true,
-              },
-            },
-            chapter: {
-              select: {
-                id: true,
-                title: true,
-                sortOrder: true,
-              },
-            },
+        course: {
+          select: {
+            id: true,
+            title: true,
+            coverImage: true,
+          },
+        },
+        chapter: {
+          select: {
+            id: true,
+            title: true,
+            sortOrder: true,
+          },
+        },
+        checkins: {
+          where: {
+            userId,
           },
         },
       },
       orderBy: {
-        checkinTime: 'desc',
+        startTime: 'desc',
       },
     });
 
-    // 格式化返回数据
-    const records = checkins.map((checkin) => ({
-      id: checkin.id,
-      sessionId: checkin.sessionId,
-      code: checkin.session.code,
-      checkinTime: checkin.checkinTime,
-      method: checkin.checkinMethod,  // 正确的字段名
-      course: checkin.session.course,
-      chapter: checkin.session.chapter,
-      isLate: checkin.checkinTime > checkin.session.endTime,
-      sessionStartTime: checkin.session.startTime,
-      sessionEndTime: checkin.session.endTime,
-    }));
+    // 3. 格式化返回数据（包括已签到和缺勤）
+    const records = sessions.map((session) => {
+      const checkin = session.checkins[0]; // 用户在该会话的签到记录（如果有）
+      const isMissed = !checkin; // 是否缺勤
 
-    // 统计信息
+      if (isMissed) {
+        // 缺勤记录
+        return {
+          id: `missed-${session.id}`,
+          sessionId: session.id,
+          code: session.code,
+          checkinTime: null,
+          method: null,
+          course: session.course,
+          chapter: session.chapter,
+          isLate: false,
+          isMissed: true,
+          sessionStartTime: session.startTime,
+          sessionEndTime: session.endTime,
+        };
+      } else {
+        // 已签到记录
+        return {
+          id: checkin.id,
+          sessionId: session.id,
+          code: session.code,
+          checkinTime: checkin.checkinTime,
+          method: checkin.checkinMethod,
+          course: session.course,
+          chapter: session.chapter,
+          isLate: checkin.checkinTime > session.endTime,
+          isMissed: false,
+          sessionStartTime: session.startTime,
+          sessionEndTime: session.endTime,
+        };
+      }
+    });
+
+    // 4. 统计信息
     const summary = {
-      totalCheckins: checkins.length,
-      onTimeCheckins: records.filter(r => !r.isLate).length,
-      lateCheckins: records.filter(r => r.isLate).length,
+      totalSessions: records.length,
+      totalCheckins: records.filter(r => !r.isMissed).length,
+      onTimeCheckins: records.filter(r => !r.isMissed && !r.isLate).length,
+      lateCheckins: records.filter(r => !r.isMissed && r.isLate).length,
+      missedCheckins: records.filter(r => r.isMissed).length,
     };
+
+    this.logger.log(`[签到记录统计] 总会话: ${summary.totalSessions}, 已签到: ${summary.totalCheckins}, 缺勤: ${summary.missedCheckins}`);
 
     return {
       summary,

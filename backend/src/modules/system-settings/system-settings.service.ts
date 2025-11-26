@@ -149,11 +149,13 @@ export class SystemSettingsService {
       appName: config.appName,
       appLogo: config.appLogo,
       appDesc: config.appDesc,
+      aboutUs: config.aboutUs,
       contactPhone: config.contactPhone,
       contactEmail: config.contactEmail,
       contactAddress: config.contactAddress,
       wechatQrCode: config.wechatQrCode,
       weiboUrl: config.weiboUrl,
+      appVersion: config.appVersion,
       isMaintenance: config.isMaintenance,
       maintenanceMsg: config.maintenanceMsg,
     };

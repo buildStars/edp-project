@@ -1,115 +1,46 @@
-/**
- * 课件管理API
- */
-import { request } from '@/utils/request'
-import type { PageResult } from '@/types'
-
-export interface Material {
-  id: string
-  courseId: string
-  title: string
-  fileUrl: string
-  fileType: string
-  fileSize: number
-  uploadedBy: string
-  chapterId?: string
-  chapter?: {
-    id: string
-    title: string
-    sortOrder: number
-  }
-  createdAt: string
-  updatedAt: string
-  _count?: {
-    downloads: number
-  }
-}
-
-export interface CreateMaterialDto {
-  courseId: string
-  title: string
-  fileUrl: string
-  fileType: string
-  fileSize: number
-  chapterId?: string
-}
-
-export interface UpdateMaterialDto {
-  title?: string
-  chapterId?: string
-}
-
-export interface MaterialQueryParams {
-  courseId: string
-  page?: number
-  pageSize?: number
-  keyword?: string
-}
+import request from '@/utils/request'
 
 /**
- * 获取课件列表
+ * 课件管理 API
  */
-export function getMaterialList(params: MaterialQueryParams) {
-  return request.get<PageResult<Material>>('/materials', { params })
+
+// 获取课件列表
+export function getMaterialList(params: any) {
+  return request.get('/materials', { params })
 }
 
-/**
- * 创建课件
- */
-export function createMaterial(data: CreateMaterialDto) {
-  return request.post<Material>('/materials', data)
+// 获取课件详情
+export function getMaterialDetail(id: string) {
+  return request.get(`/materials/${id}`)
 }
 
-/**
- * 更新课件
- */
-export function updateMaterial(id: string, data: UpdateMaterialDto) {
+// 创建课件
+export function createMaterial(data: any) {
+  return request.post('/materials', data)
+}
+
+// 更新课件
+export function updateMaterial(id: string, data: any) {
   return request.put(`/materials/${id}`, data)
 }
 
-/**
- * 删除课件
- */
+// 删除课件
 export function deleteMaterial(id: string) {
   return request.delete(`/materials/${id}`)
 }
 
-/**
- * 批量删除课件
- */
-export function batchDeleteMaterials(ids: string[]) {
-  return request.post('/materials/batch-delete', { ids })
-}
-
-/**
- * 上传文件
- */
-export function uploadFile(file: File, onProgress?: (percent: number) => void) {
+// 上传课件文件
+export function uploadMaterialFile(file: File) {
   const formData = new FormData()
   formData.append('file', file)
-
-  return request.post<{ url: string; filename: string; size: number; mimetype: string }>(
-    '/upload/file',
-    formData,
-    {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-      onUploadProgress: (progressEvent) => {
-        if (progressEvent.total && onProgress) {
-          const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total)
-          onProgress(percent)
-        }
-      },
-    }
-  ).then(res => {
-    // 转换返回格式以匹配前端期望
-    const fileExtension = res.filename.split('.').pop()?.toLowerCase() || 'unknown'
-    return {
-      url: res.url,
-      fileType: fileExtension,
-      fileSize: res.size,
+  return request.post('/materials/upload', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data'
     }
   })
 }
 
+// 获取下载记录
+export function getMaterialDownloads(materialId: string, params: any) {
+  return request.get(`/materials/${materialId}/downloads`, { params })
+}

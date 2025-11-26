@@ -965,11 +965,11 @@ enum CompletionRequestStatus {
 model AiConfig {
   id          String   @id @default(uuid())
   name        String   // AI模型名称（如：GPT-4、文心一言等）
-  provider    String   // 提供商（如：openai、baidu等）
+  provider    String   // 提供商（如：openai、baidu、gemini、kimi等）
   apiKey      String   @db.Text  // API Key（加密存储）
   apiUrl      String?  // API地址（可选，默认使用官方地址）
-  model       String   // 模型版本（如：gpt-4、gpt-3.5-turbo）
-  isActive    Boolean  @default(false)  // 是否启用
+  model       String   @unique  // 模型版本（如：gpt-4、gemini-2.5-flash）唯一，一个模型一条配置
+  isActive    Boolean  @default(false)  // 是否启用（同时只能有一个模型启用）
   maxTokens   Int      @default(2000)   // 最大token数
   temperature Float    @default(0.7)    // 温度参数
   
@@ -1052,6 +1052,9 @@ model SystemConfig {
   appLogo     String?                            // 小程序Logo
   appDesc     String?  @db.Text                  // 小程序描述
   
+  // 关于我们
+  aboutUs     String?  @db.Text                  // 关于我们详细介绍
+  
   // 联系方式
   contactPhone    String?  // 联系电话
   contactEmail    String?  // 联系邮箱
@@ -1064,6 +1067,9 @@ model SystemConfig {
   // 社交媒体
   wechatQrCode    String?  // 微信二维码
   weiboUrl        String?  // 微博链接
+  
+  // 版本信息
+  appVersion      String?  @default("1.0.0")    // 应用版本号
   
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

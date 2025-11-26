@@ -34,11 +34,11 @@ export class SystemSettingsController {
   }
 
   /**
-   * 获取轮播图列表
+   * 获取轮播图列表（公开接口，无需登录）
+   * 前端传 isActive=true 只获取已启用的
+   * 管理后台不传参数获取全部
    */
   @Get('banners')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('ADMIN')
   async getBanners(@Query('isActive') isActive?: string) {
     const isActiveBoolean = isActive === 'true' ? true : isActive === 'false' ? false : undefined;
     return this.systemSettingsService.getBanners(isActiveBoolean);
@@ -87,13 +87,13 @@ export class SystemSettingsController {
   // ==================== 系统配置管理 ====================
 
   /**
-   * 获取系统配置
+   * 获取系统配置（公开接口，无需登录）
+   * 前端和管理后台都使用同一个接口
+   * service层会根据需要返回公开信息或完整信息
    */
   @Get('config')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('ADMIN')
   async getSystemConfig() {
-    return this.systemSettingsService.getSystemConfig();
+    return this.systemSettingsService.getPublicConfig();
   }
 
   /**
@@ -104,14 +104,6 @@ export class SystemSettingsController {
   @Roles('ADMIN')
   async updateSystemConfig(@Body() dto: UpdateSystemConfigDto) {
     return this.systemSettingsService.updateSystemConfig(dto);
-  }
-
-  /**
-   * 获取公开系统配置（无需登录，供小程序端使用）
-   */
-  @Get('config/public')
-  async getPublicConfig() {
-    return this.systemSettingsService.getPublicConfig();
   }
 }
 

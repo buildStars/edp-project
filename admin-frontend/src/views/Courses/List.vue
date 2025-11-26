@@ -282,7 +282,13 @@ const handleEdit = (row: Course) => {
 
 // 课件管理
 const handleMaterials = (row: Course) => {
-  router.push(`/materials?courseId=${row.id}&title=${row.title}`)
+  router.push({
+    path: '/materials/list',
+    query: {
+      courseId: row.id,
+      title: row.title
+    }
+  })
 }
 
 // 发布

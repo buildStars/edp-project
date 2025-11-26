@@ -15,6 +15,10 @@ export class UpdateSystemConfigDto {
 
   @IsString()
   @IsOptional()
+  aboutUs?: string;
+
+  @IsString()
+  @IsOptional()
   contactPhone?: string;
 
   @IsString()
@@ -40,5 +44,9 @@ export class UpdateSystemConfigDto {
   @IsString()
   @IsOptional()
   weiboUrl?: string;
+
+  @IsString()
+  @IsOptional()
+  appVersion?: string;
 }
 

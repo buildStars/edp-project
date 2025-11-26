@@ -29,7 +29,7 @@
             <Expand v-if="isCollapse" />
             <Fold v-else />
           </el-icon>
-          <el-breadcrumb separator="/">
+          <el-breadcrumb v-if="!route.meta.hideBreadcrumb" separator="/">
             <el-breadcrumb-item v-for="item in breadcrumbs" :key="item.path" :to="item.path">
               {{ item.meta?.title }}
             </el-breadcrumb-item>
@@ -239,7 +239,7 @@ const handleCommand = async (command: string) => {
     box-shadow: 2px 0 6px rgba(0, 21, 41, 0.1);
 
     .logo {
-      height: 60px;
+      height: 80px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -248,11 +248,14 @@ const handleCommand = async (command: string) => {
       font-size: 18px;
       font-weight: bold;
       transition: all 0.3s;
+      gap: 2px;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-
+      flex-direction: column;
       img {
         height: 40px;
-        margin-right: 10px;
+       
+        width: 220px;
+        flex: 1;
       }
 
       &.collapse {

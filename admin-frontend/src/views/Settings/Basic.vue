@@ -43,6 +43,24 @@
             </el-form-item>
 
             <el-divider content-position="left">
+              <el-icon><Document /></el-icon>
+              <span style="margin-left: 8px">关于我们</span>
+            </el-divider>
+            
+            <el-form-item label="详细介绍" prop="aboutUs">
+              <el-input
+                v-model="configForm.aboutUs"
+                type="textarea"
+                :rows="8"
+                placeholder="请输入关于我们的详细介绍"
+                style="width: 600px"
+              />
+              <div style="color: #999; font-size: 12px; margin-top: 4px">
+                将在"关于我们"页面展示，支持多行文本
+              </div>
+            </el-form-item>
+
+            <el-divider content-position="left">
               <el-icon><Phone /></el-icon>
               <span style="margin-left: 8px">联系方式</span>
             </el-divider>
@@ -89,6 +107,22 @@
                 placeholder="请输入微博链接"
                 style="width: 600px"
               />
+            </el-form-item>
+
+            <el-divider content-position="left">
+              <el-icon><InfoFilled /></el-icon>
+              <span style="margin-left: 8px">版本信息</span>
+            </el-divider>
+            
+            <el-form-item label="应用版本号" prop="appVersion">
+              <el-input
+                v-model="configForm.appVersion"
+                placeholder="请输入版本号，如：1.0.0"
+                style="width: 400px"
+              />
+              <div style="color: #999; font-size: 12px; margin-top: 4px">
+                将在小程序"关于我们"页面显示
+              </div>
             </el-form-item>
 
             <el-divider content-position="left">
@@ -326,10 +360,11 @@ const activeTab = ref('config')
 
 const configFormRef = ref<FormInstance>()
 const configLoading = ref(false)
-const configForm = reactive<UpdateSystemConfigData>({
+const configForm = reactive<UpdateSystemConfigData & { aboutUs?: string; appVersion?: string }>({
   appName: '',
   appLogo: '',
   appDesc: '',
+  aboutUs: '',
   contactPhone: '',
   contactEmail: '',
   contactAddress: '',
@@ -337,6 +372,7 @@ const configForm = reactive<UpdateSystemConfigData>({
   maintenanceMsg: '',
   wechatQrCode: '',
   weiboUrl: '',
+  appVersion: '',
 })
 
 const configRules: FormRules = {
@@ -348,7 +384,21 @@ const loadSystemConfig = async () => {
   try {
     configLoading.value = true
     const data = await getSystemConfig()
-    Object.assign(configForm, data)
+    // 只提取需要的字段，不包含 id、createdAt、updatedAt
+    Object.assign(configForm, {
+      appName: data.appName || '',
+      appLogo: data.appLogo || '',
+      appDesc: data.appDesc || '',
+      aboutUs: (data as any).aboutUs || '',
+      contactPhone: data.contactPhone || '',
+      contactEmail: data.contactEmail || '',
+      contactAddress: data.contactAddress || '',
+      isMaintenance: data.isMaintenance || false,
+      maintenanceMsg: data.maintenanceMsg || '',
+      wechatQrCode: data.wechatQrCode || '',
+      weiboUrl: data.weiboUrl || '',
+      appVersion: (data as any).appVersion || '',
+    })
   } catch (error) {
     console.error('加载系统配置失败:', error)
   } finally {

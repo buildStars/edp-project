@@ -54,3 +54,8 @@ Write-Host "   2. 完善管理员个人信息" -ForegroundColor Red
 Write-Host "   3. 定期备份数据库" -ForegroundColor Red
 Write-Host ""
 
+
+
+
+
+

@@ -97,9 +97,22 @@ export interface CheckinStatsResponse {
 export interface Evaluation {
   id: string
   rating: number
+  // 旧的三项评分（保留兼容性）
   contentRating?: number
   teacherRating?: number
   organizationRating?: number
+  // 新的9项详细评分（10分制）
+  attitude1Rating?: number  // 教学态度1：教学投入、有激情
+  attitude2Rating?: number  // 教学态度2：教学认真、耐心、诚恳、友好
+  content1Rating?: number   // 教学内容1：课程主题明晰，内容清晰，论证严密
+  content2Rating?: number   // 教学内容2：课程内容实践性强，案例丰富
+  method1Rating?: number    // 教学方法1：教学方法得当：逻辑性强，条理清晰，重点突出
+  method2Rating?: number    // 教学方法2：教学对问题的阐析性强
+  effect1Rating?: number    // 教学效果1：达到预期要求，学习有效，对工作或成长提供帮助
+  effect2Rating?: number    // 教学效果2：学习了掌握新思想或新技能
+  organizationRating?: number // 教务组织：教学课程资料准备充分
+  // 文本建议
+  suggestion?: string
   createdAt: string
   user: {
     id: string

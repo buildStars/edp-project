@@ -140,9 +140,19 @@ export class UsersService {
       }
     }
 
+    // 处理密码加密
+    const data: any = { ...updateUserDto };
+    if (data.password) {
+      // 如果提供了密码，进行加密
+      data.password = await bcrypt.hash(data.password, 10);
+    } else {
+      // 如果密码为空字符串或未提供，删除密码字段（不修改密码）
+      delete data.password;
+    }
+
     return this.prisma.user.update({
       where: { id },
-      data: updateUserDto,
+      data,
     });
   }
 

@@ -101,7 +101,7 @@ const permissions = [
   // ========== 系统设置 ==========
   { code: 'settings:view', name: '查看设置', description: '查看系统设置', module: 'settings' },
   { code: 'settings:edit', name: '修改设置', description: '修改系统设置', module: 'settings' },
-  { code: 'settings:roles', name: '角色权限管理', description: '管理角色和权限', module: 'settings' },
+  { code: 'permissions:manage', name: '权限管理', description: '管理角色和权限', module: 'settings' },
 ];
 
 /**
@@ -126,7 +126,7 @@ const rolePermissions = {
     'completion:create', 'completion:view', 'completion:review', 'completion:cancel',
     'credits:manage', 'credit-requests:create', 'credit-requests:view', 'credit-requests:review', 'credit-requests:cancel',
     'statistics:view', 'statistics:export',
-    'settings:view', 'settings:edit', 'settings:roles',
+    'settings:view', 'settings:edit', 'permissions:manage',
   ],
   
   // 教务人员：负责课程、报名、协会等运营工作（包含教师的所有功能）

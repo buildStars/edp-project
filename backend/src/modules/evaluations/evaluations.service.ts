@@ -67,6 +67,18 @@ export class EvaluationsService {
         chapterId: dto.chapterId || null,
         enrollmentId: enrollment.id,
         rating: dto.rating,
+        // 新的评价字段
+        attitude1: dto.attitude1,
+        attitude2: dto.attitude2,
+        content1: dto.content1,
+        content2: dto.content2,
+        method1: dto.method1,
+        method2: dto.method2,
+        effect1: dto.effect1,
+        effect2: dto.effect2,
+        organization: dto.organization,
+        suggestion: dto.suggestion,
+        // 旧字段（兼容）
         contentRating: dto.contentRating,
         teacherRating: dto.teacherRating,
         organizationRating: dto.organizationRating,
@@ -78,6 +90,13 @@ export class EvaluationsService {
             id: true,
             title: true,
             coverImage: true,
+          },
+        },
+        chapter: {
+          select: {
+            id: true,
+            title: true,
+            sortOrder: true,
           },
         },
       },

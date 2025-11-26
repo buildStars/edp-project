@@ -13,10 +13,10 @@ export class UpdateAiConfigDto {
   @IsNotEmpty()
   provider: string;
 
-  @ApiProperty({ description: 'API Key' })
+  @ApiPropertyOptional({ description: 'API Key（更新时可选，不传则保留原值）' })
   @IsString()
-  @IsNotEmpty()
-  apiKey: string;
+  @IsOptional()
+  apiKey?: string;
 
   @ApiPropertyOptional({ description: 'API地址' })
   @IsString()

@@ -8,6 +8,11 @@ export class QueryMaterialDto {
   @IsString()
   courseId?: string;
 
+  @ApiPropertyOptional({ description: '文件类型' })
+  @IsOptional()
+  @IsString()
+  fileType?: string;
+
   @ApiPropertyOptional({ description: '页码' })
   @IsOptional()
   @Type(() => Number)
