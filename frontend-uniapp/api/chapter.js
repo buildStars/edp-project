@@ -1,7 +1,7 @@
 /**
  * 章节管理 API
  */
-import request from './request'
+import { get } from './request'
 
 /**
  * 获取课程章节列表
@@ -11,11 +11,7 @@ import request from './request'
  * @returns {Promise}
  */
 export function getChapters(params) {
-  return request({
-    url: '/api/chapters',
-    method: 'GET',
-    params: params
-  })
+  return get('/api/chapters', params)
 }
 
 /**
@@ -24,9 +20,6 @@ export function getChapters(params) {
  * @returns {Promise}
  */
 export function getChapterDetail(id) {
-  return request({
-    url: `/api/chapters/${id}`,
-    method: 'GET'
-  })
+  return get(`/api/chapters/${id}`)
 }
 

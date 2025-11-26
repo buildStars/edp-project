@@ -164,9 +164,9 @@
               <text>退课审核中</text>
             </button>
             
-            <!-- 签到按钮 - 只在有活跃签到会话且未签到时显示 -->
+            <!-- 签到按钮 - 只在有活跃签到会话且未签到时显示（退课申请中也可以签到，只有已通过退课的不能签到）-->
             <button 
-              v-if="!courseDetail.refundStatus && checkinSession.hasActiveSession && !checkinSession.alreadyCheckedIn"
+              v-if="courseDetail.refundStatus !== 'APPROVED' && checkinSession.hasActiveSession && !checkinSession.alreadyCheckedIn"
               class="btn-checkin"
               @click="showCheckinModal"
             >
@@ -344,6 +344,23 @@ onLoad(async (options) => {
     
     // 检查并显示结课海报
     await checkAndShowCompletionPoster()
+    
+    // 如果URL包含 action=checkin，自动打开签到弹窗
+    if (options.action === 'checkin') {
+      // 延迟一下，确保页面已加载完成
+      setTimeout(() => {
+        // 检查是否已报名且有活跃签到会话
+        if (courseDetail.value.isEnrolled && checkinSession.value.hasActiveSession && checkinSession.value.canCheckin) {
+          showCheckinModal()
+        } else {
+          // 如果没有活跃签到会话，提示用户
+          uni.showToast({
+            title: '当前没有进行中的签到',
+            icon: 'none'
+          })
+        }
+      }, 500)
+    }
   }
 })
 
@@ -373,8 +390,14 @@ const loadCourseDetail = async () => {
     loadChapterList()
     
     // 如果已报名，加载签到会话信息
+    console.log('🔍 检查是否需要加载签到会话:')
+    console.log('   - data.isEnrolled:', data.isEnrolled)
+    console.log('   - userStore.isLogin:', userStore.isLogin)
     if (data.isEnrolled && userStore.isLogin) {
-      fetchActiveCheckinSession()
+      console.log('✅ 条件满足，开始加载签到会话')
+      await fetchActiveCheckinSession()
+    } else {
+      console.log('❌ 条件不满足，跳过加载签到会话')
     }
   } catch (error) {
     console.error('加载课程详情失败：', error)
@@ -421,7 +444,14 @@ const loadChapterList = async () => {
 const fetchActiveCheckinSession = async () => {
   try {
     const data = await getActiveCheckinSession(courseId.value)
+    console.log('🔔 获取签到会话返回:', JSON.stringify(data, null, 2))
     checkinSession.value = data
+    console.log('🔔 更新后的 checkinSession.value:', JSON.stringify(checkinSession.value, null, 2))
+    console.log('🔔 签到按钮显示条件:')
+    console.log('   - courseDetail.refundStatus:', courseDetail.value.refundStatus)
+    console.log('   - checkinSession.hasActiveSession:', checkinSession.value.hasActiveSession)
+    console.log('   - checkinSession.alreadyCheckedIn:', checkinSession.value.alreadyCheckedIn)
+    console.log('   - 应该显示签到按钮:', !courseDetail.value.refundStatus && checkinSession.value.hasActiveSession && !checkinSession.value.alreadyCheckedIn)
     
     // 如果有活跃会话，定时刷新
     if (data.hasActiveSession && data.canCheckin) {
@@ -473,26 +503,54 @@ const submitCode = async () => {
     checkinSession.value.alreadyCheckedIn = true
     checkinSession.value.canCheckin = false
     
-    // 重新加载课程详情以刷新评价状态
-    await loadCourseDetail()
+    // 显示签到成功提示
+    const isOnTime = result.status === 'ON_TIME'
+    const statusText = isOnTime ? '准时签到' : '迟到签到'
     
-    // 重新加载章节列表以更新签到状态
-    await loadChapterList()
+    uni.showModal({
+      title: '签到成功',
+      content: `${statusText}！${result.message || ''}`,
+      showCancel: false,
+      confirmText: '确定',
+      confirmColor: '#52C41A',
+      success: async () => {
+        // 重新加载课程详情以刷新评价状态
+        await loadCourseDetail()
+        
+        // 重新加载章节列表以更新签到状态
+        await loadChapterList()
+      }
+    })
     
-    // 显示签到成功提示（不再自动跳转评价页面）
-    uni.showToast({ 
-      title: result.message || '签到成功', 
-      icon: 'success',
-      duration: 2000
+    // 成功震动反馈
+    uni.vibrateShort({
+      type: 'medium'
     })
     
   } catch (error) {
     console.error('❌ 签到失败:', error)
     uni.hideLoading()
-    uni.showToast({ 
-      title: error.msg || error.message || '签到失败', 
-      icon: 'none' 
+    
+    // 获取错误信息
+    const errorMsg = error.msg || error.message || '签到失败，请重试'
+    
+    // 显示错误提示（使用 modal 更明显）
+    uni.showModal({
+      title: '签到失败',
+      content: errorMsg,
+      showCancel: false,
+      confirmText: '我知道了',
+      confirmColor: '#C8161D'
     })
+    
+    // 震动反馈
+    uni.vibrateShort({
+      type: 'heavy'
+    })
+    
+    // 不关闭弹窗，让用户可以重新输入
+    // 清空已输入的签到码
+    checkinCode.value = ''
   }
 }
 

@@ -1,34 +1,45 @@
 {
-  "name": "北大汇丰EDP",
-  "appid": "__UNI__EDPAPP",
-  "description": "北大汇丰EDP小程序，提供资讯、课程、协会等服务",
-  "versionName": "1.0.0",
-  "versionCode": "100",
-  "transformPx": false,
-  "mp-weixin": {
-    "appid": "",
-    "setting": {
-      "urlCheck": false,
-      "es6": true,
-      "enhance": true,
-      "postcss": true,
-      "minified": true,
-      "coverView": true,
-      "lazyCodeLoading": "requiredComponents"
+    "name" : "北大汇丰EDP",
+    "appid" : "__UNI__EDPAPP",
+    "description" : "北大汇丰EDP小程序，提供资讯、课程、协会等服务",
+    "versionName" : "1.0.0",
+    "versionCode" : "100",
+    "transformPx" : false,
+    "mp-weixin" : {
+        "appid" : "wxa1db08fc86709ee2",
+        "setting" : {
+            "urlCheck" : false,
+            "es6" : true,
+            "enhance" : true,
+            "postcss" : true,
+            "minified" : true,
+            "coverView" : true,
+            "lazyCodeLoading" : "requiredComponents"
+        },
+        "usingComponents" : true,
+        "permission" : {
+            "scope.userLocation" : {
+                "desc" : "您的位置信息将用于查看附近课程"
+            }
+        },
+        "requiredPrivateInfos" : [ "getLocation" ]
     },
-    "usingComponents": true,
-    "permission": {
-      "scope.userLocation": {
-        "desc": "您的位置信息将用于查看附近课程"
-      }
+    "h5" : {
+        "title" : "北大汇丰EDP",
+        "router" : {
+            "mode" : "hash",
+            "base" : "/h5/"
+        },
+        "optimization" : {
+            "treeShaking" : {
+                "enable" : true
+            }
+        },
+        "publicPath" : "/h5/",
+        "template" : "index.html"
     },
-    "requiredPrivateInfos": [
-      "getLocation"
-    ]
-  },
-  "uniStatistics": {
-    "enable": false
-  },
-  "vueVersion": "3"
+    "uniStatistics" : {
+        "enable" : false
+    },
+    "vueVersion" : "3"
 }
-

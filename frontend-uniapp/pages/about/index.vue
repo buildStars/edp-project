@@ -1,6 +1,6 @@
 <template>
   <view class="page">
-    <custom-navbar title="关于我们" />
+  
     
     <view class="content">
       <!-- Logo和名称 -->
@@ -40,7 +40,7 @@
           </view>
           <view class="info-value">
             <text>{{ systemConfig.contactEmail }}</text>
-            <Icon name="copy" :size="28" color="#999" />
+             <image src="../../static/icons/copy.png" mode="aspectFit"  class="copy-icon" />
           </view>
         </view>
         
@@ -52,6 +52,17 @@
           <view class="info-value">
             <text>{{ systemConfig.contactAddress }}</text>
           </view>
+        </view>
+      </view>
+      
+      <!-- 关于我们详细介绍 -->
+      <view v-if="systemConfig.aboutUs" class="section">
+        <view class="section-title">
+          <Icon name="info" :size="36" color="#C8161D" />
+          <text>关于我们</text>
+        </view>
+        <view class="about-content">
+          {{ systemConfig.aboutUs }}
         </view>
       </view>
       
@@ -87,7 +98,7 @@
       
       <!-- 版本信息 -->
       <view class="version-info">
-        <text>版本号：v1.0.0</text>
+        <text>版本号：v{{ systemConfig.appVersion || '1.0.0' }}</text>
       </view>
     </view>
   </view>
@@ -103,11 +114,13 @@ const systemConfig = ref({
   appName: '北大汇丰EDP',
   appLogo: '',
   appDesc: '',
+  aboutUs: '',
   contactPhone: '',
   contactEmail: '',
   contactAddress: '',
   wechatQrCode: '',
-  weiboUrl: ''
+  weiboUrl: '',
+  appVersion: '1.0.0'
 })
 
 const loading = ref(false)
@@ -245,6 +258,14 @@ const openWeibo = () => {
     border-bottom: 1rpx solid #f0f0f0;
   }
   
+  .about-content {
+    font-size: 28rpx;
+    color: #666;
+    line-height: 2;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  
   .info-item {
     display: flex;
     justify-content: space-between;
@@ -313,6 +334,11 @@ const openWeibo = () => {
   font-size: 24rpx;
   color: #999;
   padding: 40rpx 0;
+}
+.copy-icon {
+  width: 40rpx;
+  height: 40rpx;
+  cursor: pointer;
 }
 </style>
 

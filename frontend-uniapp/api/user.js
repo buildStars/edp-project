@@ -82,7 +82,7 @@ export function uploadAvatar(filePath) {
     const token = uni.getStorageSync('token')
     
     uni.uploadFile({
-      url: `${process.env.NODE_ENV === 'development' ? 'http://192.168.0.106:3000' : 'http://neopersonal.site'}/api/users/upload-avatar`,
+      url: `${process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : 'http://neopersonal.site'}/api/users/upload-avatar`,
       filePath: filePath,
       name: 'file',
       header: {

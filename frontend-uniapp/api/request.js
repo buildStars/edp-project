@@ -6,8 +6,8 @@
 // 开发环境：真机调试使用局域网IP，模拟器使用localhost
 // 生产环境：使用正式域名
 const BASE_URL = process.env.NODE_ENV === 'development' 
-  ? 'http://localhost:3000'      // 开发环境 - 本地调试
-  : 'http://neopersonal.site'    // 生产环境 - 您的域名
+  ? 'http://localhost:3000'      // 开发环境 - 本地调试（绕过代理）
+  : 'http://192.168.0.76'        // 生产环境 - 服务器IP（H5和小程序）
 
 /**
  * 发起网络请求
@@ -177,5 +177,15 @@ export function upload(filePath, options = {}) {
   })
 }
 
-export default request
+// 便捷方法对象（使用已有的导出函数）
+const http = {
+  get,
+  post,
+  put,
+  delete: del,
+  upload
+}
+
+// 默认导出
+export default http
 

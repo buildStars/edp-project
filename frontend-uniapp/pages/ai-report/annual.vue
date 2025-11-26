@@ -2,15 +2,9 @@
   <view class="annual-report">
     <custom-navbar title="我的年度报告" :show-back="true" />
     
-    <!-- 顶部年份选择 -->
-    <view class="year-selector" :style="{ marginTop: navbarHeight + 'px' }">
-      <view class="year-item" 
-        v-for="year in availableYears" 
-        :key="year"
-        :class="{ active: currentYear === year }"
-        @click="selectYear(year)">
-        {{ year }}
-      </view>
+    <!-- 顶部年份显示 -->
+    <view class="year-display" :style="{ marginTop: navbarHeight + 'px' }">
+      <view class="current-year">{{ currentYear }} 年度报告</view>
     </view>
 
     <!-- 加载状态 -->
@@ -182,7 +176,6 @@ export default {
     return {
       navbarHeight: 44,
       currentYear: new Date().getFullYear(),
-      availableYears: [],
       loading: false,
       generating: false,
       reportData: null,
@@ -206,22 +199,18 @@ export default {
       return this.reportData.recommendations.split('\n').filter(item => item.trim())
     }
   },
-  onLoad() {
-    this.initYears()
-    this.loadReport()
+  onLoad(options) {
+    // 只使用当前年份，不接受其他年份参数
+    this.currentYear = new Date().getFullYear()
+    
+    // 如果有 action=generate 参数，自动触发生成
+    if (options.action === 'generate') {
+      this.handleGenerate()
+    } else {
+      this.loadReport()
+    }
   },
   methods: {
-    initYears() {
-      const currentYear = new Date().getFullYear()
-      this.availableYears = [currentYear, currentYear - 1, currentYear - 2]
-    },
-    
-    selectYear(year) {
-      if (this.currentYear === year) return
-      this.currentYear = year
-      this.loadReport()
-    },
-    
     async loadReport() {
       this.loading = true
       try {
@@ -316,6 +305,11 @@ export default {
         const radarData = JSON.parse(radarDataStr)
         this.radarIndicators = radarData.indicators || []
         this.radarValues = radarData.values || []
+        
+        // 调试日志
+        console.log('📊 雷达图数据解析成功:')
+        console.log('  indicators:', this.radarIndicators)
+        console.log('  values:', this.radarValues)
       } catch (error) {
         console.error('解析雷达图数据失败:', error)
         this.radarIndicators = []
@@ -324,22 +318,37 @@ export default {
     },
     
     drawRadarChart() {
-      if (!this.radarIndicators.length || !this.radarValues.length) return
+      console.log('🎨 开始绘制雷达图...')
+      console.log('  indicators count:', this.radarIndicators.length)
+      console.log('  values count:', this.radarValues.length)
       
-      const query = uni.createSelectorQuery().in(this)
-      query.select('#radarCanvas').fields({ node: true, size: true }).exec((res) => {
-        if (!res || !res[0]) return
+      if (!this.radarIndicators.length || !this.radarValues.length) {
+        console.warn('⚠️  雷达图数据为空，跳过绘制')
+        return
+      }
+      
+      // #ifdef H5
+      // H5 环境：直接获取 Canvas 元素
+      this.$nextTick(() => {
+        const canvas = document.getElementById('radarCanvas')
+        if (!canvas) {
+          console.error('❌ H5: 无法获取 Canvas 元素')
+          return
+        }
         
-        const canvas = res[0].node
         const ctx = canvas.getContext('2d')
+        const rect = canvas.getBoundingClientRect()
+        const width = rect.width
+        const height = rect.height
         
-        const dpr = uni.getSystemInfoSync().pixelRatio
-        canvas.width = res[0].width * dpr
-        canvas.height = res[0].height * dpr
+        // 设置 Canvas 实际大小（考虑 DPR）
+        const dpr = window.devicePixelRatio || 1
+        canvas.width = width * dpr
+        canvas.height = height * dpr
         ctx.scale(dpr, dpr)
         
-        const width = res[0].width
-        const height = res[0].height
+        console.log('✅ H5 Canvas 元素获取成功:', width, 'x', height)
+        
         const centerX = width / 2
         const centerY = height / 2
         const radius = Math.min(width, height) / 2 - 40
@@ -347,15 +356,51 @@ export default {
         // 清空画布
         ctx.clearRect(0, 0, width, height)
         
-        // 绘制背景网格
+        // 绘制雷达图
         this.drawRadarGrid(ctx, centerX, centerY, radius)
-        
-        // 绘制数据区域
         this.drawRadarData(ctx, centerX, centerY, radius)
-        
-        // 绘制标签
         this.drawRadarLabels(ctx, centerX, centerY, radius)
       })
+      // #endif
+      
+      // #ifdef MP-WEIXIN
+      // 小程序环境：使用旧版 Canvas API (更稳定)
+      this.$nextTick(() => {
+        const query = uni.createSelectorQuery().in(this)
+        query.select('.radar-canvas').boundingClientRect().exec((res) => {
+          if (!res || !res[0]) {
+            console.error('❌ 小程序: 无法获取 Canvas 尺寸')
+            return
+          }
+          
+          const width = res[0].width
+          const height = res[0].height
+          console.log('✅ 小程序 Canvas 尺寸:', width, 'x', height)
+          
+          // 使用 canvas-id 获取上下文（旧版 API）
+          const ctx = uni.createCanvasContext('radarCanvas', this)
+          
+          const centerX = width / 2
+          const centerY = height / 2
+          const radius = Math.min(width, height) / 2 - 40
+          
+          // 清空画布
+          ctx.clearRect(0, 0, width, height)
+          
+          // 绘制背景网格
+          this.drawRadarGrid(ctx, centerX, centerY, radius)
+          
+          // 绘制数据区域
+          this.drawRadarData(ctx, centerX, centerY, radius)
+          
+          // 绘制标签
+          this.drawRadarLabels(ctx, centerX, centerY, radius)
+          
+          // 小程序需要调用 draw() 来渲染
+          ctx.draw()
+        })
+      })
+      // #endif
     },
     
     drawRadarGrid(ctx, centerX, centerY, radius) {
@@ -487,31 +532,46 @@ export default {
   padding-bottom: env(safe-area-inset-bottom);
 }
 
-.year-selector {
+.year-display {
   display: flex;
   justify-content: center;
-  padding: 20rpx 32rpx;
+  padding: 24rpx 32rpx;
   background: #fff;
   
-  .year-item {
-    padding: 16rpx 40rpx;
-    margin: 0 16rpx;
-    border-radius: 40rpx;
-    font-size: 28rpx;
-    color: #666;
-    transition: all 0.3s;
-    
-    &.active {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: #fff;
-      font-weight: 600;
-    }
+  .current-year {
+    font-size: 32rpx;
+    font-weight: 600;
+    color: #333;
   }
 }
 
 .loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   padding: 200rpx 0;
   text-align: center;
+  
+  .loading-spinner {
+    width: 60rpx;
+    height: 60rpx;
+    border: 6rpx solid #f3f3f3;
+    border-top: 6rpx solid #C8161D;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+  
+  .loading-text {
+    margin-top: 32rpx;
+    font-size: 28rpx;
+    color: #666;
+  }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 .empty-state {
@@ -789,5 +849,9 @@ export default {
   height: env(safe-area-inset-bottom);
 }
 </style>
+
+
+
+
 
 

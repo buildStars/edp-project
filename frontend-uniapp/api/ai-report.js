@@ -6,7 +6,7 @@ import { get, post } from './request'
  * @param {boolean} force - 是否强制重新生成
  */
 export function generateAiReport(year, force = false) {
-  return post('/ai-reports/generate', { year, force })
+  return post('/api/ai-reports/generate', { year, force })
 }
 
 /**
@@ -14,14 +14,18 @@ export function generateAiReport(year, force = false) {
  * @param {number} year - 年份
  */
 export function getAiReport(year) {
-  return get(`/ai-reports`, { year })
+  return get('/api/ai-reports', { year })
 }
 
 /**
  * 获取我的报告列表
  */
 export function getMyReports() {
-  return get('/ai-reports/my')
+  return get('/api/ai-reports/my')
 }
+
+
+
+
 
 

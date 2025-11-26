@@ -123,6 +123,26 @@ services:
       timeout: 10s
       retries: 3
 
+  # uni-app H5服务
+  uniapp-h5:
+    build:
+      context: ../frontend-uniapp
+      dockerfile: Dockerfile
+    container_name: edp-uniapp-h5
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "8081:80"
+    networks:
+      - edp-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80/h5/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
 # 数据卷
 volumes:
   mysql_data:

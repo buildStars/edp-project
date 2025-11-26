@@ -2,7 +2,7 @@
   <view class="custom-navbar" :style="{ height: navbarHeight + 'px' }">
     <view 
       class="navbar-content" 
-      :style="{ paddingTop: statusBarHeight + 'px', height: (navbarHeight - statusBarHeight) + 'px' }"
+      :style="{ paddingTop: (statusBarHeight-10) + 'px', height: (navbarHeight + 'px') }"
     >
       <view class="navbar-left" @click="handleBack" v-if="showBack">
         <Icon name="back" :size="40" />
@@ -47,8 +47,8 @@ const navbarHeight = ref(0)
 onMounted(() => {
   const systemInfo = uni.getSystemInfoSync()
   statusBarHeight.value = systemInfo.statusBarHeight || 0
-  // 导航栏高度 = 状态栏高度 + 导航栏内容高度（44px）
-  navbarHeight.value = statusBarHeight.value 
+  // 导航栏高度 = 状态栏高度 + 导航栏内容高度（44px，约88rpx）
+  navbarHeight.value = statusBarHeight.value + 44
 })
 
 // 返回上一页
@@ -71,16 +71,16 @@ const handleBack = () => {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 24rpx;
-    
+    padding: 0 32rpx;
+  
     .navbar-left {
-      width: 80rpx;
+      width: 88rpx;
       display: flex;
       align-items: center;
       
       .back-icon {
-        width: 40rpx;
-        height: 40rpx;
+        width: 48rpx;
+        height: 48rpx;
       }
     }
     
@@ -91,19 +91,21 @@ const handleBack = () => {
       justify-content: center;
       
       .logo {
-        height:7.875rem;
-        width: 15.75rem;
+        height: 60rpx;
+        width: auto;
+        max-width: 400rpx;
       }
       
       .navbar-title {
         font-size: 32rpx;
         font-weight: 500;
         color: #333;
+       
       }
     }
     
     .navbar-right {
-      width: 80rpx;
+      width: 88rpx;
       display: flex;
       align-items: center;
       justify-content: flex-end;

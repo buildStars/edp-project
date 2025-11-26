@@ -240,7 +240,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { onPullDownRefresh } from '@dcloudio/uni-app'
+import { onShow, onPullDownRefresh } from '@dcloudio/uni-app'
 import { useUserStore } from '@/store/user'
 import { useCourseStore } from '@/store/course'
 import { formatTime } from '@/utils/util'
@@ -311,6 +311,13 @@ onMounted(() => {
   const systemInfo = uni.getSystemInfoSync()
   statusBarHeight.value = systemInfo.statusBarHeight || 0
   
+  if (userStore.isLogin) {
+    loadUserData()
+  }
+})
+
+// 页面显示时刷新数据（确保从其他页面返回时数据是最新的）
+onShow(() => {
   if (userStore.isLogin) {
     loadUserData()
   }
@@ -461,7 +468,7 @@ const goDownloadList = () => {
 // 跳转AI报告
 const goAIReport = () => {
   uni.navigateTo({
-    url: '/pages/ai/report'
+    url: '/pages/ai-report/index'
   })
 }
 

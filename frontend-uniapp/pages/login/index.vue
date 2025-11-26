@@ -179,6 +179,13 @@ const handleAccountLogin = async () => {
     userStore.setToken(data.token)
     userStore.setUserInfo(data.userInfo)
     
+    // 获取学分信息
+    try {
+      await userStore.fetchCredits()
+    } catch (error) {
+      console.error('获取学分失败：', error)
+    }
+    
     uni.showToast({
       title: '登录成功',
       icon: 'success'
@@ -224,6 +231,13 @@ const handleWxLogin = async () => {
     // 3. 保存token和用户信息
     userStore.setToken(data.token)
     userStore.setUserInfo(data.userInfo)
+    
+    // 3.5 获取学分信息
+    try {
+      await userStore.fetchCredits()
+    } catch (error) {
+      console.error('获取学分失败：', error)
+    }
     
     // 4. 判断是否需要完善信息（根据后端返回的 profileCompleted 字段）
     const needCompleteProfile = data.userInfo.profileCompleted === false

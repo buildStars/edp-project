@@ -204,17 +204,34 @@ const handleItemClick = async (item) => {
   }
   
   // 根据通知类型跳转
-  if (item.data && item.data.url) {
-    uni.navigateTo({ url: item.data.url })
-  } else {
-    // 显示详情弹窗
-    uni.showModal({
-      title: item.title,
-      content: item.content,
-      showCancel: false,
-      confirmText: '知道了'
-    })
+  if (item.data) {
+    // 优先使用 link 字段
+    if (item.data.link) {
+      uni.navigateTo({ url: item.data.link })
+      return
+    }
+    
+    // 兼容旧的 url 字段
+    if (item.data.url) {
+      uni.navigateTo({ url: item.data.url })
+      return
+    }
+    
+    // 签到通知特殊处理
+    if (item.type === 'COURSE_CHECKIN' && item.data.courseId) {
+      const url = `/pages/course/detail?id=${item.data.courseId}&action=checkin`
+      uni.navigateTo({ url })
+      return
+    }
   }
+  
+  // 默认显示详情弹窗
+  uni.showModal({
+    title: item.title,
+    content: item.content,
+    showCancel: false,
+    confirmText: '知道了'
+  })
 }
 
 // 全部标记为已读

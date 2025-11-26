@@ -4,8 +4,8 @@
 
 // 配置 BASE_URL
 const BASE_URL = process.env.NODE_ENV === 'development' 
-  ? 'http://192.168.0.106:3000'  // 开发环境 - 支持真机调试
-  : 'http://neopersonal.site'    // 生产环境 - 您的域名
+  ? 'http://localhost:3000'      // 开发环境 - 本地调试（绕过代理）
+  : 'http://192.168.0.76'        // 生产环境 - 服务器IP（H5和小程序）
 
 /**
  * 获取完整的图片 URL

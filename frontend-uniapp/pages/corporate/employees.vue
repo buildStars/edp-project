@@ -58,7 +58,6 @@
 
       <!-- 空状态 -->
       <view v-if="!loading && employees.length === 0" class="empty-state">
-        <image src="/static/images/empty.png" class="empty-image" mode="aspectFit" />
         <text class="empty-text">暂无企业员工</text>
       </view>
     </view>
@@ -356,7 +355,7 @@ const handlePurchase = (emp) => {
       font-size: 26rpx;
       border-radius: 32rpx;
       border: none;
-      
+      padding: 0;
       &.btn-primary {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white;

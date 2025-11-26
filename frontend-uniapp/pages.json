@@ -119,6 +119,14 @@
       }
     },
     {
+      "path": "pages/ai-report/index",
+      "style": {
+        "navigationBarTitleText": "AI 学习报告",
+        "navigationStyle": "custom",
+        "enablePullDownRefresh": false
+      }
+    },
+    {
       "path": "pages/ai-report/annual",
       "style": {
         "navigationBarTitleText": "年度报告",

@@ -14,18 +14,23 @@
       
       <view class="summary-grid">
         <view class="stat-item">
-          <view class="stat-value">{{ summary.totalCheckins }}</view>
-          <view class="stat-label">总签到</view>
+          <view class="stat-value">{{ summary.totalSessions || 0 }}</view>
+          <view class="stat-label">总会话</view>
         </view>
         <view class="stat-divider"></view>
         <view class="stat-item">
-          <view class="stat-value success">{{ summary.onTimeCheckins }}</view>
+          <view class="stat-value success">{{ summary.onTimeCheckins || 0 }}</view>
           <view class="stat-label">准时</view>
         </view>
         <view class="stat-divider"></view>
         <view class="stat-item">
-          <view class="stat-value warning">{{ summary.lateCheckins }}</view>
+          <view class="stat-value warning">{{ summary.lateCheckins || 0 }}</view>
           <view class="stat-label">迟到</view>
+        </view>
+        <view class="stat-divider"></view>
+        <view class="stat-item">
+          <view class="stat-value error">{{ summary.missedCheckins || 0 }}</view>
+          <view class="stat-label">缺勤</view>
         </view>
       </view>
     </view>
@@ -33,10 +38,15 @@
     <!-- 签到记录列表 -->
     <view class="records-section">
       <view 
-        v-for="record in records" 
-        :key="record.id"
+        v-for="(record, index) in records" 
+        :key="`${record.id}-${index}`"
         class="record-card"
       >
+        <!-- 调试信息（开发时使用）-->
+        <text style="font-size: 20rpx; color: #999; display: block; margin-bottom: 10rpx;">
+          Debug: isMissed={{record.isMissed}}, isLate={{record.isLate}}
+        </text>
+        
         <!-- 课程信息 -->
         <view class="record-header">
           <view class="course-info">
@@ -58,29 +68,62 @@
           </view>
           
           <!-- 状态标签 -->
-          <view class="status-badge" :class="record.isLate ? 'badge-late' : 'badge-ontime'">
-            {{ record.isLate ? '迟到' : '准时' }}
+          <view 
+            class="status-badge" 
+            :class="getStatusClass(record)"
+          >
+            {{ getStatusText(record) }}
           </view>
         </view>
         
         <!-- 签到详情 -->
         <view class="record-body">
-          <view class="detail-row">
-            <Icon name="time" :size="32" color="#999" />
-            <text class="detail-label">签到时间</text>
-            <text class="detail-value">{{ formatTime(record.checkinTime, 'YYYY-MM-DD HH:mm:ss') }}</text>
-          </view>
+          <!-- 缺勤信息 -->
+          <template v-if="record.isMissed">
+            <view class="missed-notice">
+              <Icon name="close" :size="32" color="#F44336" />
+              <text class="missed-text">未参与本次签到</text>
+            </view>
+            
+            <view class="detail-row">
+              <Icon name="time" :size="32" color="#F44336" />
+              <text class="detail-label">缺勤时间</text>
+              <text class="detail-value error">{{ formatTime(record.sessionEndTime, 'YYYY-MM-DD HH:mm:ss') }}</text>
+            </view>
+            
+            <view class="detail-row">
+              <Icon name="order" :size="32" color="#999" />
+              <text class="detail-label">签到码</text>
+              <text class="detail-value code disabled">{{ record.code }}</text>
+            </view>
+          </template>
           
-          <view class="detail-row">
-            <Icon name="check" :size="32" color="#999" />
-            <text class="detail-label">签到方式</text>
-            <text class="detail-value">{{ getMethodText(record.method) }}</text>
-          </view>
+          <!-- 已签到详情 -->
+          <template v-else>
+            <view class="detail-row">
+              <Icon name="time" :size="32" color="#999" />
+              <text class="detail-label">签到时间</text>
+              <text class="detail-value">{{ formatTime(record.checkinTime, 'YYYY-MM-DD HH:mm:ss') }}</text>
+            </view>
+            
+            <view class="detail-row">
+              <Icon name="check" :size="32" color="#999" />
+              <text class="detail-label">签到方式</text>
+              <text class="detail-value">{{ getMethodText(record.method) }}</text>
+            </view>
+            
+            <view class="detail-row">
+              <Icon name="order" :size="32" color="#999" />
+              <text class="detail-label">签到码</text>
+              <text class="detail-value code">{{ record.code }}</text>
+            </view>
+          </template>
           
-          <view class="detail-row">
-            <Icon name="order" :size="32" color="#999" />
-            <text class="detail-label">签到码</text>
-            <text class="detail-value code">{{ record.code }}</text>
+          <!-- 会话时间信息 -->
+          <view class="detail-row session-time">
+            <Icon name="calendar" :size="32" color="#999" />
+            <text class="detail-label">会话时间</text>
+            <text class="detail-value small">{{ formatTime(record.sessionStartTime, 'YYYY-MM-DD HH:mm') }}</text>
           </view>
         </view>
       </view>
@@ -139,6 +182,12 @@ const loadCheckinRecords = async () => {
     records.value = res.records
     
     console.log('✅ 签到记录加载成功:', res)
+    console.log('📊 统计信息:', res.summary)
+    console.log('📋 记录详情:')
+    res.records.forEach((record, index) => {
+      console.log(`  [${index}] ${record.isMissed ? '❌缺勤' : (record.isLate ? '🟡迟到' : '✅准时')} - ${record.course.title}`)
+      console.log(`       isMissed: ${record.isMissed}, isLate: ${record.isLate}`)
+    })
   } catch (error) {
     console.error('❌ 加载签到记录失败:', error)
     uni.showToast({
@@ -158,6 +207,20 @@ const getMethodText = (method) => {
     MAKEUP: '补签'
   }
   return methodMap[method] || '未知'
+}
+
+// 获取状态文本
+const getStatusText = (record) => {
+  if (record.isMissed) return '缺勤'
+  if (record.isLate) return '迟到'
+  return '准时'
+}
+
+// 获取状态样式类
+const getStatusClass = (record) => {
+  if (record.isMissed) return 'badge-missed'
+  if (record.isLate) return 'badge-late'
+  return 'badge-ontime'
 }
 
 
@@ -216,6 +279,10 @@ const getMethodText = (method) => {
         
         &.warning {
           color: #FF9800;
+        }
+        
+        &.error {
+          color: #F44336;
         }
       }
       
@@ -325,6 +392,11 @@ const getMethodText = (method) => {
         background: #fff3e0;
         color: #FF9800;
       }
+      
+      &.badge-missed {
+        background: #ffebee;
+        color: #F44336;
+      }
     }
   }
   
@@ -332,6 +404,22 @@ const getMethodText = (method) => {
     display: flex;
     flex-direction: column;
     gap: 16rpx;
+    
+    .missed-notice {
+      display: flex;
+      align-items: center;
+      gap: 12rpx;
+      padding: 20rpx;
+      background: #ffebee;
+      border-radius: 12rpx;
+      border-left: 6rpx solid #F44336;
+      
+      .missed-text {
+        font-size: 28rpx;
+        color: #F44336;
+        font-weight: 500;
+      }
+    }
     
     .detail-row {
       display: flex;
@@ -355,6 +443,27 @@ const getMethodText = (method) => {
           letter-spacing: 4rpx;
           color: #C8161D;
         }
+        
+        &.small {
+          font-size: 26rpx;
+          color: #666;
+        }
+        
+        &.error {
+          color: #F44336;
+          font-weight: 500;
+        }
+      }
+      
+      .detail-value.code.disabled {
+        color: #999;
+        text-decoration: line-through;
+      }
+      
+      &.session-time {
+        padding-top: 8rpx;
+        margin-top: 8rpx;
+        border-top: 2rpx dashed #f0f0f0;
       }
     }
   }

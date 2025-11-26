@@ -4,7 +4,7 @@
     <view class="page-header" :style="{ height: headerHeight + 'px' }">
       <view class="header-content">
         <view class="header-logo">
-          <image src="/static/images/logo.png" class="logo-image" mode="aspectFit" />
+          <image :src="systemConfig.appLogo||'/static/images/logo.png'" class="logo-image" mode="aspectFit" />
         </view>
         <view class="header-actions">
           <view class="action-icon" @click="goSearch">
@@ -54,7 +54,7 @@
     </view>
     
     <!-- 快捷入口 - 优化版 -->
-    <view class="quick-entry">
+    <!-- <view class="quick-entry">
       <view class="entry-grid">
         <view 
           class="entry-item" 
@@ -120,7 +120,7 @@
         </view>
       </view>
     </view>
-    
+     -->
     <!-- 最新资讯 - 优化版 -->
     <view class="section news-section">
       <view class="section-header">
@@ -259,7 +259,7 @@ import { getNewsList } from '@/api/news'
 import { getCourseList } from '@/api/course'
 import { getActivityList } from '@/api/association'
 import { getUnreadCount } from '@/api/notification'
-import { getBannerList } from '@/api/system'
+import { getBannerList, getSystemConfig } from '@/api/system'
 
 // 用户store
 const userStore = useUserStore()
@@ -274,6 +274,11 @@ const unreadCount = ref(0)
 
 // 当前Banner索引
 const currentBanner = ref(0)
+
+// 系统配置
+const systemConfig = ref({
+  appLogo: '/static/images/logo.png'  // 默认logo
+})
 
 // Banner数据
 const banners = ref([])
@@ -306,6 +311,7 @@ onMounted(() => {
 // 加载首页数据
 const loadHomeData = async () => {
   await Promise.all([
+    loadSystemConfig(),
     loadBanners(),
     loadLatestNews(),
     loadHotCourses(),
@@ -315,6 +321,19 @@ const loadHomeData = async () => {
   // 如果已登录，获取未读消息数量
   if (userStore.isLogin) {
     fetchUnreadCount()
+  }
+}
+
+// 加载系统配置
+const loadSystemConfig = async () => {
+  try {
+    const data = await getSystemConfig()
+    if (data && data.appLogo) {
+      systemConfig.value.appLogo = data.appLogo
+    }
+  } catch (error) {
+    console.error('加载系统配置失败：', error)
+    // 使用默认logo
   }
 }
 
@@ -575,8 +594,8 @@ onPullDownRefresh(async () => {
       .logo-image {
         height: 80rpx;
         transform: scale(2);
-        max-width: 480rpx;
-        height: 110rpx;
+        max-width: 200rpx;
+       
       }
     }
     
