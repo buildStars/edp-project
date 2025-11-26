@@ -16,9 +16,10 @@ dist/
 
 # Uni-app 构建目录（开发时的输出忽略）
 unpackage/
-# 但允许H5生产构建产物（用于Docker部署）
+# 但允许Web/H5生产构建产物（用于Docker部署）
 !unpackage/dist/
 !unpackage/dist/build/
+!unpackage/dist/build/web/
 !unpackage/dist/build/h5/
 
 # Environment variables
