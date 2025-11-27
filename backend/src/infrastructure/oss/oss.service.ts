@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 import * as fs from 'fs';
 import * as path from 'path';
 import { LoggerService } from '../logger/logger.service';
+import { getFullUrl } from '../../common/utils/url.util';
 
 @Injectable()
 export class OssService {
@@ -118,14 +119,12 @@ export class OssService {
     // 写入文件
     fs.writeFileSync(filePath, file.buffer);
 
-    // 返回访问URL
-    // 如果配置了 APP_URL（生产环境），使用完整 URL；否则使用相对路径（开发环境）
-    const baseUrl = this.configService.get('APP_URL', '');
+    // 返回访问URL - 使用统一的URL工具处理
     const relativePath = `/uploads/${folder}/${filename}`;
+    const fullUrl = getFullUrl(relativePath);
     
-    const fullUrl = baseUrl ? `${baseUrl}${relativePath}` : relativePath;
-    
-    this.logger.debug(`文件已保存: ${filePath}, URL: ${fullUrl}`, 'OssService');
+    this.logger.log(`✅ 文件已保存: ${filePath}`, 'OssService');
+    this.logger.log(`📎 访问URL: ${fullUrl}`, 'OssService');
     
     return fullUrl;
   }

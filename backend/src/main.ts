@@ -18,14 +18,21 @@ async function bootstrap() {
   app.useLogger(logger);
 
   // 配置静态资源目录（用于本地文件上传）
-  // __dirname 在编译后是 dist/src，需要返回到项目根目录
-  app.useStaticAssets(join(__dirname, '..', '..', 'uploads'), {
+  // 优先使用项目根目录的uploads（适配Docker容器）
+  // __dirname 在编译后是 dist/src
+  const uploadsPath = process.env.NODE_ENV === 'production' 
+    ? join(process.cwd(), 'uploads')  // Docker容器内：/app/uploads
+    : join(__dirname, '..', '..', 'uploads');  // 开发环境：相对路径
+  
+  logger.log(`📁 静态文件目录: ${uploadsPath}`);
+  
+  app.useStaticAssets(uploadsPath, {
     prefix: '/uploads/',
     // 添加CORS头，允许跨域访问静态资源
     setHeaders: (res) => {
       res.set('Access-Control-Allow-Origin', '*');
-      res.set('Access-Control-Allow-Methods', 'GET');
-      res.set('Access-Control-Allow-Headers', 'Content-Type');
+      res.set('Access-Control-Allow-Methods', 'GET, OPTIONS');
+      res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
       res.set('Cache-Control', 'public, max-age=31536000');
     },
   });

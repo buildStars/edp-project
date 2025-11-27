@@ -15,13 +15,22 @@ export function getFullUrl(path: string | null | undefined): string {
     return path;
   }
 
-  // 获取 APP_URL，默认为 http://localhost:3000
+  // 获取 APP_URL 环境变量
+  // 生产环境：https://edp.yunchuangshuan.com
+  // 开发环境：http://localhost:3000
   const APP_URL = process.env.APP_URL || 'http://localhost:3000';
 
   // 如果是相对路径，拼接 APP_URL
   // 确保路径以 / 开头
   const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-  return `${APP_URL}${normalizedPath}`;
+  const fullUrl = `${APP_URL}${normalizedPath}`;
+  
+  // 在开发环境打印日志，方便调试
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`[URL转换] ${path} -> ${fullUrl}`);
+  }
+  
+  return fullUrl;
 }
 
 /**
@@ -34,6 +43,7 @@ export function getFullUrls(
 ): string[] {
   return paths.map((path) => getFullUrl(path));
 }
+
 
 
 

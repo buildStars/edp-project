@@ -15,9 +15,14 @@ const BASE_URL = process.env.NODE_ENV === 'development'
 export function getImageUrl(path) {
   if (!path) return ''
   
-  // 如果已经是完整的 HTTP/HTTPS URL，直接返回
+  // 如果已经是完整的 HTTP/HTTPS URL
   if (path.startsWith('http://') || path.startsWith('https://')) {
+    // 🔧 关键修复：替换内网IP为公网域名
+    // 将所有内网IP替换为公网域名（兼容不同内网IP段）
     return path
+      .replace(/http:\/\/192\.168\.\d+\.\d+(:\d+)?/g, 'https://edp.yunchuangshuan.com')
+      .replace(/http:\/\/127\.0\.0\.1(:\d+)?/g, 'https://edp.yunchuangshuan.com')
+      .replace(/http:\/\/localhost(:\d+)?/g, 'https://edp.yunchuangshuan.com')
   }
   
   // 如果是相对路径，拼接 BASE_URL
