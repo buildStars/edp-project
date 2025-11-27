@@ -34,10 +34,9 @@
     "h5" : {
         "title" : "北大汇丰EDP",
         "router" : {
-            "base" : "/h5/",
+            "base" : "/",
             "mode" : "hash"
         },
-        "publicPath" : "/h5/",
         "devServer" : {
             "https" : false,
             "port" : 8080
