@@ -1,0 +1,1 @@
+import{J as n,K as i,L as a}from"./index-CCW0MaS3.js";function t(i){return n("/api/notifications",i)}function o(){return n("/api/notifications/unread-count")}function r(n){return i("/api/notifications/mark-read",n)}function s(){return a("/api/notifications/clear-read")}export{t as a,s as c,o as g,r as m};

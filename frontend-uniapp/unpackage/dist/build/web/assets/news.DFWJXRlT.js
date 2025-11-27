@@ -1,0 +1,1 @@
+import{J as n,K as e,L as s}from"./index-CCW0MaS3.js";function t(e){return n("/api/news",e)}function a(e){return n(`/api/news/${e}`)}function i(n){return e("/api/news/collect",{newsId:n})}function r(n){return s("/api/news/collect",{newsId:n})}function c(e){return n("/api/news/my-collection",e)}export{a,c as b,i as c,t as g,r as u};
