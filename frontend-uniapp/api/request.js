@@ -6,8 +6,8 @@
 // 开发环境：真机调试使用局域网IP，模拟器使用localhost
 // 生产环境：使用正式域名
 const BASE_URL = process.env.NODE_ENV === 'development' 
-  ? 'http://localhost:3000'      // 开发环境 - 本地调试（绕过代理）
-  : 'http://192.168.0.76'        // 生产环境 - 服务器IP（H5和小程序）
+  ? 'http://localhost:3000'           // 开发环境 - 本地调试
+  : 'https://edp.yunchuangshuan.com'  // 生产环境 - 公网域名（HTTPS）
 
 /**
  * 发起网络请求
