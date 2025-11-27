@@ -34,7 +34,7 @@
     "h5" : {
         "title" : "北大汇丰EDP",
         "router" : {
-            "base" : "/",
+            "base" : "/h5/",
             "mode" : "hash"
         },
         "publicPath" : "/h5/",

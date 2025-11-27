@@ -1,22 +1,19 @@
 import { defineConfig } from 'vite'
 import uni from '@dcloudio/vite-plugin-uni'
-import path from 'path'
 
 export default defineConfig({
+  base: '/h5/',
   plugins: [
     uni()
   ],
-  resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './'),
-    }
-  },
-  css: {
-    preprocessorOptions: {
-      scss: {
-        additionalData: '@import "@/static/styles/variables.scss";'
-      }
-    }
+  build: {
+    // 静态资源基础路径
+    assetsDir: 'assets',
+    // 输出目录
+    outDir: 'unpackage/dist/build/web',
+    // 资源内联阈值
+    assetsInlineLimit: 4096,
+    // chunk大小警告限制
+    chunkSizeWarningLimit: 500
   }
 })
-
