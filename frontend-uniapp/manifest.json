@@ -37,6 +37,7 @@
             "base" : "/",
             "mode" : "hash"
         },
+        "publicPath" : "/h5/",
         "devServer" : {
             "https" : false,
             "port" : 8080
