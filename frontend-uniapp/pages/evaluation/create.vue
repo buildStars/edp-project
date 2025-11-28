@@ -96,6 +96,14 @@
         <text class="icon">⭐</text>
         <text class="text">每项评价满分10分，您的评价将帮助我们改进课程质量</text>
       </view>
+      <view class="tip-item highlight">
+        <text class="icon">🔒</text>
+        <text class="text">您的评价为匿名评价，授课老师无法查看具体评价内容</text>
+      </view>
+      <view class="tip-item highlight">
+        <text class="icon">👥</text>
+        <text class="text">管理员/教务人员会对老师进行反馈，帮助改进教学质量</text>
+      </view>
       <view class="tip-item">
         <text class="icon">📄</text>
         <text class="text">评价完成后即可下载课件资料</text>
@@ -468,6 +476,19 @@ const handleCancel = () => {
     
     &:last-child {
       margin-bottom: 0;
+    }
+    
+    &.highlight {
+      background: #E6F7FF;
+      padding: 16rpx;
+      border-radius: 12rpx;
+      border: 2rpx solid #91D5FF;
+      margin-bottom: 20rpx;
+      
+      .text {
+        color: #0050B3;
+        font-weight: 500;
+      }
     }
     
     .icon {

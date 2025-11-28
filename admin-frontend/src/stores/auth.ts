@@ -14,6 +14,7 @@ export const useAuthStore = defineStore(
     const token = ref<string>('')
     const userInfo = ref<UserInfo | null>(null)
     const permissions = ref<string[]>([])
+    const menus = ref<any[]>([])
 
     // 登录
     const login = async (params: LoginParams) => {
@@ -37,6 +38,7 @@ export const useAuthStore = defineStore(
         const res = await getUserInfo()
         userInfo.value = res.user
         permissions.value = res.permissions || []
+        menus.value = res.menus || [] // 保存后端返回的菜单配置
         return res
       } catch (error) {
         throw error
@@ -57,6 +59,7 @@ export const useAuthStore = defineStore(
         token.value = ''
         userInfo.value = null
         permissions.value = []
+        menus.value = []
 
         // 跳转登录页
         router.push('/login')
@@ -84,6 +87,7 @@ export const useAuthStore = defineStore(
       token,
       userInfo,
       permissions,
+      menus,
       login,
       fetchUserInfo,
       logout,
@@ -95,7 +99,7 @@ export const useAuthStore = defineStore(
     persist: {
       key: 'edp-admin-auth',
       storage: localStorage,
-      paths: ['token', 'userInfo', 'permissions'], // 添加 permissions 到持久化配置
+      paths: ['token', 'userInfo', 'permissions', 'menus'], // 添加 menus 到持久化配置
     },
   }
 )

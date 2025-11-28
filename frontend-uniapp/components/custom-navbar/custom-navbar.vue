@@ -38,6 +38,9 @@ const props = defineProps({
   }
 })
 
+// Emits
+const emit = defineEmits(['back'])
+
 // 状态栏高度
 const statusBarHeight = ref(0)
 // 导航栏高度
@@ -53,7 +56,13 @@ onMounted(() => {
 
 // 返回上一页
 const handleBack = () => {
-  uni.navigateBack()
+  // 如果父组件监听了 back 事件，则触发自定义事件
+  // 否则使用默认的返回上一页行为
+  if (emit) {
+    emit('back')
+  } else {
+    uni.navigateBack()
+  }
 }
 </script>
 

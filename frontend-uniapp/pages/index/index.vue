@@ -53,6 +53,51 @@
       </view>
     </view>
     
+    <!-- 公司简介 -->
+    <view class="intro-section">
+      <view class="intro-card">
+        <view class="intro-header">
+          <view class="intro-icon">🏛️</view>
+          <view class="intro-title">{{ systemConfig.appName || 'EDP 教育平台' }}</view>
+        </view>
+        <view class="intro-content">
+          <text class="intro-text">{{ systemConfig.appDescription || '致力于为企业高管和职业经理人提供专业的教育培训服务，打造一流的企业培训平台。' }}</text>
+        </view>
+        <view class="intro-features">
+          <view class="feature-tag">专业培训</view>
+          <view class="feature-tag">精品课程</view>
+          <view class="feature-tag">优质服务</view>
+        </view>
+      </view>
+    </view>
+    
+    <!-- 快速导航 -->
+    <view class="quick-nav">
+      <view class="nav-item" @click="scrollToSection('news-section')">
+        <view class="nav-icon gradient-red">
+          <Icon name="news" :size="48" color="#fff" />
+        </view>
+        <text class="nav-text">最新资讯</text>
+        <text class="nav-desc">了解最新动态</text>
+      </view>
+      
+      <view class="nav-item" @click="scrollToSection('course-section')">
+        <view class="nav-icon gradient-blue">
+          <Icon name="course" :size="48" color="#fff" />
+        </view>
+        <text class="nav-text">热门课程</text>
+        <text class="nav-desc">精选优质课程</text>
+      </view>
+      
+      <view class="nav-item" @click="scrollToSection('activity-section')">
+        <view class="nav-icon gradient-pink">
+          <Icon name="association" :size="48" color="#fff" />
+        </view>
+        <text class="nav-text">精彩活动</text>
+        <text class="nav-desc">参与互动交流</text>
+      </view>
+    </view>
+    
     <!-- 快捷入口 - 优化版 -->
     <!-- <view class="quick-entry">
       <view class="entry-grid">
@@ -122,7 +167,7 @@
     </view>
      -->
     <!-- 最新资讯 - 优化版 -->
-    <view class="section news-section">
+    <view id="news-section" class="section news-section">
       <view class="section-header">
         <view class="section-title-wrapper">
           <view class="section-icon">
@@ -157,7 +202,7 @@
     </view>
     
     <!-- 热门课程 - 优化版 -->
-    <view class="section course-section">
+    <view id="course-section" class="section course-section">
       <view class="section-header">
         <view class="section-title-wrapper">
           <view class="section-icon">
@@ -168,7 +213,7 @@
             <text class="section-subtitle">Popular Courses</text>
           </view>
         </view>
-        <view class="section-more" @click="goPage('/pages/course/index')">
+        <view class="section-more" @click="goCourseList">
           <text>查看全部</text>
           <Icon name="arrow-right" :size="28" color="#667eea" />
         </view>
@@ -192,7 +237,7 @@
     </view>
     
     <!-- 精彩活动 - 优化版 -->
-    <view class="section activity-section">
+    <view id="activity-section" class="section activity-section">
       <view class="section-header">
         <view class="section-title-wrapper">
           <view class="section-icon">
@@ -203,7 +248,7 @@
             <text class="section-subtitle">Activities</text>
           </view>
         </view>
-        <view class="section-more" @click="goPage('/pages/association/index?tab=activity')">
+        <view class="section-more" @click="goActivityList">
           <text>查看全部</text>
           <Icon name="arrow-right" :size="28" color="#f5576c" />
         </view>
@@ -469,6 +514,48 @@ const goPage = (url) => {
   uni.navigateTo({ url })
 }
 
+// 跳转到课程列表
+const goCourseList = () => {
+  // 课程页面在tabBar中，使用switchTab
+  uni.switchTab({
+    url: '/pages/course/index'
+  })
+}
+
+// 跳转到活动列表
+const goActivityList = () => {
+  // 因为association/index是tabBar页面，需要用switchTab
+  // 先设置一个全局标记
+  uni.setStorageSync('association_tab', 'activity')
+  uni.switchTab({
+    url: '/pages/association/index'
+  })
+}
+
+// 滚动到指定区域
+const scrollToSection = (sectionId) => {
+  // 创建查询节点
+  const query = uni.createSelectorQuery()
+  query.select(`#${sectionId}`).boundingClientRect()
+  query.selectViewport().scrollOffset()
+  query.exec((res) => {
+    if (res[0]) {
+      // 获取元素距离顶部的距离
+      const top = res[0].top
+      // 获取当前滚动位置
+      const scrollTop = res[1].scrollTop
+      // 计算目标位置（减去导航栏高度，增加一些偏移量）
+      const targetTop = scrollTop + top - headerHeight.value - 20
+      
+      // 平滑滚动到目标位置
+      uni.pageScrollTo({
+        scrollTop: targetTop,
+        duration: 300
+      })
+    }
+  })
+}
+
 // 跳转AI报告
 const goAIReport = () => {
   if (!userStore.isLogin) {
@@ -722,6 +809,119 @@ onPullDownRefresh(async () => {
         border-radius: 6rpx;
         background-color: #fff;
       }
+    }
+  }
+}
+
+// 公司简介
+.intro-section {
+  margin: 32rpx 24rpx;
+  
+  .intro-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 24rpx;
+    padding: 40rpx 32rpx;
+    box-shadow: 0 8rpx 32rpx rgba(102, 126, 234, 0.3);
+    
+    .intro-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 24rpx;
+      
+      .intro-icon {
+        font-size: 56rpx;
+        margin-right: 16rpx;
+      }
+      
+      .intro-title {
+        flex: 1;
+        font-size: 36rpx;
+        font-weight: bold;
+        color: #fff;
+      }
+    }
+    
+    .intro-content {
+      margin-bottom: 24rpx;
+      
+      .intro-text {
+        font-size: 28rpx;
+        line-height: 48rpx;
+        color: rgba(255, 255, 255, 0.95);
+      }
+    }
+    
+    .intro-features {
+      display: flex;
+      gap: 16rpx;
+      flex-wrap: wrap;
+      
+      .feature-tag {
+        padding: 12rpx 24rpx;
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10rpx);
+        border-radius: 24rpx;
+        font-size: 24rpx;
+        color: #fff;
+      }
+    }
+  }
+}
+
+// 快速导航
+.quick-nav {
+  display: flex;
+  gap: 16rpx;
+  margin: 0 24rpx 32rpx;
+  
+  .nav-item {
+    flex: 1;
+    background: #fff;
+    border-radius: 20rpx;
+    padding: 32rpx 20rpx;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.05);
+    transition: all 0.3s;
+    
+    &:active {
+      transform: translateY(-4rpx);
+      box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.1);
+    }
+    
+    .nav-icon {
+      width: 96rpx;
+      height: 96rpx;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16rpx;
+      
+      &.gradient-red {
+        background: linear-gradient(135deg, #C8161D 0%, #FF6B6B 100%);
+      }
+      
+      &.gradient-blue {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      }
+      
+      &.gradient-pink {
+        background: linear-gradient(135deg, #f5576c 0%, #f093fb 100%);
+      }
+    }
+    
+    .nav-text {
+      font-size: 28rpx;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 8rpx;
+    }
+    
+    .nav-desc {
+      font-size: 22rpx;
+      color: #999;
     }
   }
 }

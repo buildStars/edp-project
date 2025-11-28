@@ -88,6 +88,18 @@
         </el-table-column>
         <el-table-column prop="teacherName" label="讲师" width="120" />
         <el-table-column prop="credit" label="学分" width="80" align="center" />
+        <el-table-column label="学员数量" width="100" align="center">
+          <template #default="{ row }">
+            <el-text type="primary">{{ row.enrollmentCount || 0 }}</el-text>
+          </template>
+        </el-table-column>
+        <el-table-column label="待签到" width="100" align="center">
+          <template #default="{ row }">
+            <el-text :type="(row.pendingCheckinCount || 0) > 0 ? 'warning' : 'success'">
+              {{ row.pendingCheckinCount || 0 }}
+            </el-text>
+          </template>
+        </el-table-column>
         <el-table-column label="报名状态" width="100">
           <template #default="{ row }">
             <el-tag :type="row.enrollStatus === 'OPEN' ? 'success' : 'info'">

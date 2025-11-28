@@ -101,7 +101,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, computed } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   User as UserIcon,
@@ -121,16 +121,8 @@ import type { ElTree } from 'element-plus'
 import { menuConfig } from '@/config/permissions'
 import { getAllRolePermissions, updateRolePermissions } from '@/api/permission'
 
-// 角色定义
+// 角色定义（排除学员，因为学员只使用小程序，无法登录管理后台）
 const roles = ref([
-  {
-    key: 'STUDENT',
-    label: '学员',
-    desc: '报名学习的普通用户',
-    icon: UserIcon,
-    color: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    permissionCount: 0,
-  },
   {
     key: 'ADVISOR',
     label: '课程顾问',
@@ -195,6 +187,8 @@ const iconMap: Record<string, any> = {
 
 /**
  * 构建权限树
+ * 注意：这里应该从后端获取完整的权限列表，而不是从前端菜单构建
+ * 因为菜单只包含部分权限，很多操作权限（如 create、edit、delete）不会出现在菜单中
  */
 const buildPermissionTree = () => {
   const tree: any[] = []
@@ -202,6 +196,9 @@ const buildPermissionTree = () => {
   menuConfig.forEach((menu) => {
     // 跳过个人中心（不需要权限控制）
     if (menu.path === '/profile') return
+    
+    // 跳过被隐藏的菜单项（在配置权限时应该显示所有权限）
+    // if (menu.hideForRoles) return // 移除此过滤，显示所有菜单权限
 
     const menuNode: any = {
       code: menu.permission || menu.path,
@@ -222,11 +219,20 @@ const buildPermissionTree = () => {
           })
         }
       })
+      // 有子菜单的，添加父节点
+      tree.push(menuNode)
+    } else if (menu.permission) {
+      // 没有子菜单但有权限的独立菜单项，作为叶子节点添加
+      tree.push({
+        code: menu.permission,
+        label: menu.title,
+        icon: menu.icon ? iconMap[menu.icon] : undefined,
+        isModule: true, // 独立菜单项也算作模块级别
+      })
     }
-
-    tree.push(menuNode)
   })
 
+  console.log('🌲 权限树构建完成:', tree)
   return tree
 }
 
@@ -238,18 +244,23 @@ const rolePermissionsData = ref<Record<string, string[]>>({})
  */
 const loadRolePermissions = async () => {
   try {
-    const data = await getAllRolePermissions()
+    const response = await getAllRolePermissions()
+    const data = response.data || response // 兼容不同的响应格式
     
     // 转换为 Map 结构
     rolePermissionsData.value = {}
-    data.forEach((item: any) => {
-      rolePermissionsData.value[item.role] = item.permissions
-    })
+    if (Array.isArray(data)) {
+      data.forEach((item: any) => {
+        rolePermissionsData.value[item.role] = item.permissions
+      })
+    }
 
-    // 更新角色卡片的权限数量
+    // 更新角色卡片的权限数量（只统计view权限，即菜单访问权限）
     roles.value.forEach((role) => {
       const permissions = rolePermissionsData.value[role.key] || []
-      role.permissionCount = permissions.length
+      // 只统计以 :view 结尾的权限（菜单访问权限）
+      const viewPermissions = permissions.filter(p => p.endsWith(':view'))
+      role.permissionCount = viewPermissions.length
     })
 
     console.log('✅ 已加载角色权限配置:', rolePermissionsData.value)
@@ -321,11 +332,23 @@ const handleSave = async () => {
 
   const checkedKeys = permissionTreeRef.value.getCheckedKeys() as string[]
   const halfCheckedKeys = permissionTreeRef.value.getHalfCheckedKeys() as string[]
-  const allKeys = [...checkedKeys, ...halfCheckedKeys]
+  
+  // 合并并去重（防止父节点和子节点的权限代码重复）
+  const allKeys = Array.from(new Set([...checkedKeys, ...halfCheckedKeys]))
+
+  // 调试日志
+  console.log('🔍 保存权限配置:')
+  console.log('  - 完全选中的节点:', checkedKeys)
+  console.log('  - 半选中的节点:', halfCheckedKeys)
+  console.log('  - 合并后的权限:', allKeys)
 
   try {
+    // 统计菜单数量（只统计 :view 权限，即菜单访问权限）
+    const viewPermissions = allKeys.filter(key => key.endsWith(':view'))
+    const menuCount = viewPermissions.length
+    
     await ElMessageBox.confirm(
-      `确定要保存 ${currentRole.value?.label} 的权限配置吗？共选择了 ${checkedKeys.length} 个权限。`,
+      `确定要保存 ${currentRole.value?.label} 的权限配置吗？共选择了 ${menuCount} 个菜单，${allKeys.length} 个权限。`,
       '保存确认',
       {
         confirmButtonText: '确定',
@@ -337,20 +360,26 @@ const handleSave = async () => {
     saving.value = true
 
     // 调用后端API保存权限配置
-    await updateRolePermissions(selectedRole.value, allKeys)
-
-    // 更新本地数据
-    rolePermissionsData.value[selectedRole.value] = allKeys
+    const result = await updateRolePermissions(selectedRole.value, allKeys)
     
-    // 更新权限数量
+    console.log('✅ 保存成功，后端返回:', result)
+
+    // 更新本地数据（使用后端返回的实际权限）
+    // 兼容不同的响应格式
+    const responseData = result.data || result
+    rolePermissionsData.value[selectedRole.value] = responseData.permissions || allKeys
+    
+    // 更新权限数量（只统计 :view 权限）
     const role = roles.value.find((r) => r.key === selectedRole.value)
     if (role) {
-      role.permissionCount = checkedKeys.length
+      const savedViewPermissions = (responseData.permissions || allKeys).filter((p: string) => p.endsWith(':view'))
+      role.permissionCount = savedViewPermissions.length
     }
 
     ElMessage.success('权限配置保存成功')
   } catch (error: any) {
     if (error !== 'cancel') {
+      console.error('❌ 保存失败:', error)
       ElMessage.error(error.message || '保存失败')
     }
   } finally {

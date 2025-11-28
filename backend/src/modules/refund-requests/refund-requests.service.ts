@@ -17,10 +17,10 @@ export class RefundRequestsService {
   ) {}
 
   /**
-   * 创建退课申请（开课前三天以上才能申请）
+   * 创建退课申请（开课前48小时以上自动退款，48小时内需审批）
    */
   async create(userId: string, dto: CreateRefundRequestDto) {
-    const { enrollmentId, reason } = dto;
+    const { enrollmentId, reason, refundFeePercent = 5 } = dto;
 
     // 查找报名记录
     const enrollment = await this.prisma.enrollment.findUnique({
@@ -47,14 +47,24 @@ export class RefundRequestsService {
       throw new BadRequestException('赠送课程不支持退课');
     }
 
-    // 检查开课时间（开课前三天才能退课）
+    // 检查开课时间
     const now = dayjs();
     const courseStartTime = dayjs(enrollment.course.startTime);
-    const daysDiff = courseStartTime.diff(now, 'day');
+    const hoursDiff = courseStartTime.diff(now, 'hour');
 
-    if (daysDiff < 3) {
-      throw new BadRequestException('开课前三天内不能退课');
+    // 课前48小时内需要审核，48小时外直接通过
+    let requestStatus: RefundRequestStatus = RefundRequestStatus.PENDING;
+    let autoApproved = false;
+    
+    if (hoursDiff > 48) {
+      // 48小时外，直接通过
+      requestStatus = RefundRequestStatus.APPROVED as RefundRequestStatus;
+      autoApproved = true;
+    } else if (hoursDiff < 0) {
+      // 已开课，不能退课
+      throw new BadRequestException('课程已开始，无法取消报名');
     }
+    // 48小时内，需要审核 (requestStatus保持PENDING)
 
     // 检查是否已有待处理的退课申请
     const existingRequest = await this.prisma.refundRequest.findFirst({
@@ -65,7 +75,7 @@ export class RefundRequestsService {
     });
 
     if (existingRequest) {
-      throw new BadRequestException('已有待处理的退课申请');
+      throw new BadRequestException('已有待处理的取消申请');
     }
 
     // 创建退课申请
@@ -76,7 +86,7 @@ export class RefundRequestsService {
         courseId: enrollment.courseId,
         reason,
         creditAmount: enrollment.course.credit,
-        status: RefundRequestStatus.PENDING,
+        status: requestStatus,
       },
       include: {
         course: {
@@ -91,14 +101,116 @@ export class RefundRequestsService {
       },
     });
 
+    // 如果自动通过，执行退款操作
+    if (autoApproved) {
+      // 计算实际退回学分（扣除手续费）
+      const actualRefundAmount = Math.floor(enrollment.course.credit * (1 - refundFeePercent / 100));
+      const feeAmount = enrollment.course.credit - actualRefundAmount;
+      
+      await this.prisma.$transaction(async (tx) => {
+        await this.processRefundInTransaction(
+          tx,
+          request.id,
+          enrollment,
+          userId,
+          enrollment.course.title,
+          actualRefundAmount,
+          feeAmount
+        );
+      });
+      
+      this.logger.log(
+        `[自动取消报名] 用户: ${userId}, 课程: ${enrollment.course.title}, 原学分: ${enrollment.course.credit}, 手续费: ${feeAmount}, 退回学分: ${actualRefundAmount}`,
+      );
+
+      return {
+        message: `取消报名成功，已扣除${refundFeePercent}%手续费，退回${actualRefundAmount}学分`,
+        request,
+        refundAmount: actualRefundAmount,
+        feeAmount,
+      };
+    }
+
     this.logger.log(
-      `[退课申请] 用户: ${userId}, 课程: ${enrollment.course.title}, 退回学分: ${enrollment.course.credit}`,
+      `[退课申请] 用户: ${userId}, 课程: ${enrollment.course.title}, 退回学分: ${enrollment.course.credit}, 需审核`,
     );
 
     return {
-      message: '退课申请已提交，请等待审批',
+      message: '课前48小时内取消报名需审核，请等待教务处理',
       request,
     };
+  }
+
+  /**
+   * 处理退款逻辑（退回学分并取消报名）
+   * @private
+   */
+  private async processRefundInTransaction(tx: any, requestId: string, enrollment: any, userId: string, courseTitle: string, refundAmount: number, feeAmount: number = 0) {
+    // 1. 获取学分账户
+    const credit = await tx.credit.findUnique({
+      where: { userId },
+    });
+
+    if (!credit) {
+      throw new BadRequestException('学分账户不存在');
+    }
+
+    // 2. 退回学分（退课时统一退回到个人学分，更灵活）
+    const newBalance = credit.balance + refundAmount;
+    const newUsed = credit.used - refundAmount;
+    const newPersonalBalance = credit.personalBalance + refundAmount;
+
+    await tx.credit.update({
+      where: { id: credit.id },
+      data: {
+        balance: newBalance,
+        used: Math.max(0, newUsed),
+        personalBalance: newPersonalBalance,
+      },
+    });
+
+    // 3. 记录学分变动
+    const remarkText = feeAmount > 0 
+      ? `取消报名《${courseTitle}》，退回学分（已扣除${feeAmount}学分手续费）`
+      : `取消报名《${courseTitle}》，退回学分`;
+    
+    await tx.creditRecord.create({
+      data: {
+        creditId: credit.id,
+        type: CreditRecordType.REFUND,
+        amount: refundAmount,
+        balance: newBalance,
+        courseId: enrollment.courseId,
+        courseName: courseTitle,
+        remark: remarkText,
+      },
+    });
+
+    // 4. 更新报名状态为已取消
+    await tx.enrollment.update({
+      where: { id: enrollment.id },
+      data: {
+        status: EnrollmentStatus.CANCELLED,
+      },
+    });
+
+    // 5. 发送通知
+    try {
+      await this.notificationsService.create({
+        userId,
+        type: 'REFUND_REQUEST',
+        title: '取消报名成功',
+        content: `您已成功取消报名课程《${courseTitle}》，${refundAmount}学分已退回您的账户`,
+        data: {
+          courseId: enrollment.courseId,
+          refundRequestId: requestId,
+          creditAmount: refundAmount,
+          url: `/pages/mine/my-courses`,
+        },
+      });
+    } catch (error) {
+      this.logger.error(`发送退课通知失败: ${error.message}`);
+    }
   }
 
   /**
@@ -260,78 +372,19 @@ export class RefundRequestsService {
       });
 
       if (status === 'APPROVED') {
-        // 通过：退回学分并取消报名
-        
-        // 1. 获取学分账户
-        const credit = await tx.credit.findUnique({
-          where: { userId: request.userId },
-        });
-
-        if (!credit) {
-          throw new BadRequestException('学分账户不存在');
-        }
-
-        // 2. 退回学分（退课时统一退回到个人学分，更灵活）
-        const newBalance = credit.balance + request.creditAmount;
-        const newUsed = credit.used - request.creditAmount;
-        const newPersonalBalance = credit.personalBalance + request.creditAmount;
-
-        await tx.credit.update({
-          where: { id: credit.id },
-          data: {
-            balance: newBalance,
-            used: Math.max(0, newUsed),
-            personalBalance: newPersonalBalance,
-          },
-        });
-
-        // 3. 记录学分变动
-        await tx.creditRecord.create({
-          data: {
-            creditId: credit.id,
-            type: CreditRecordType.REFUND,
-            amount: request.creditAmount,
-            balance: newBalance,
-            courseId: request.courseId,
-            courseName: request.course.title,
-            remark: `退课《${request.course.title}》，退回学分`,
-          },
-        });
-
-        // 4. 删除报名记录（退课成功后用户可以重新报名）
-        // 注意：由于 RefundRequest 与 Enrollment 是级联删除关系
-        // 删除 Enrollment 前需要先解除 RefundRequest 的外键约束
-        // 或者保留报名记录但更新状态为 CANCELLED
-        // 这里我们选择更新状态，而不是删除，以保留历史记录
-        await tx.enrollment.update({
-          where: { id: request.enrollmentId },
-          data: {
-            status: EnrollmentStatus.CANCELLED,
-          },
-        });
-
-        this.logger.log(
-          `[退课申请通过] 用户: ${request.user.nickname}, 课程: ${request.course.title}, 退回学分: ${request.creditAmount}`,
+        // 通过：调用退款处理逻辑
+        await this.processRefundInTransaction(
+          tx,
+          requestId,
+          request.enrollment,
+          request.userId,
+          request.course.title,
+          request.creditAmount
         );
-
-        // 发送退课成功通知
-        try {
-          await this.notificationsService.create({
-            userId: request.userId,
-            type: 'REFUND_REQUEST',
-            title: '退课申请已通过',
-            content: `您的退课申请已通过，课程《${request.course.title}》已退课成功，${request.creditAmount}学分已退回您的账户`,
-            data: {
-              courseId: request.courseId,
-              refundRequestId: requestId,
-              creditAmount: request.creditAmount,
-              url: `/pages/mine/my-courses`,
-            },
-          });
-          this.logger.log(`[退课通知] 已发送给用户: ${request.userId}, 课程: ${request.course.title}`);
-        } catch (error) {
-          this.logger.error(`[退课通知] 发送失败: ${error.message}`);
-        }
+        
+        this.logger.log(
+          `[取消报名申请通过] 用户: ${request.user.nickname}, 课程: ${request.course.title}, 退回学分: ${request.creditAmount}`,
+        )
 
         return {
           ...updatedRequest,

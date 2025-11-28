@@ -63,6 +63,9 @@ model User {
   teacherRelations         TeacherStudent[] @relation("TeacherRelations")       // 作为教师的学员关系
   studentRelations         TeacherStudent[] @relation("StudentRelations")       // 作为学员的教师关系
   aiReports                AiReport[]                                           // AI报告
+  associationJoinRequests  AssociationJoinRequest[]                             // 协会加入申请
+  reviewedAssociationJoinRequests AssociationJoinRequest[] @relation("ReviewedAssociationJoinRequests") // 审批的协会申请
+  associationMembers       AssociationMember[]          @relation("AssociationMembers") // 加入的协会
   
   @@index([openid])
   @@index([phone])
@@ -428,6 +431,8 @@ model Association {
   
   // 关联
   activities    Activity[]
+  joinRequests  AssociationJoinRequest[]
+  members       AssociationMember[]
   
   @@index([type])
   @@map("associations")
@@ -436,6 +441,60 @@ model Association {
 enum AssociationType {
   ALUMNI      // 同学会
   CLUB        // 俱乐部
+}
+
+// 协会加入申请表
+model AssociationJoinRequest {
+  id            String                      @id @default(uuid())
+  userId        String
+  user          User                        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  associationId String
+  association   Association                 @relation(fields: [associationId], references: [id], onDelete: Cascade)
+  status        AssociationJoinStatus       @default(PENDING)
+  reason        String?                     @db.Text
+  reviewedBy    String?
+  reviewer      User?                       @relation("ReviewedAssociationJoinRequests", fields: [reviewedBy], references: [id])
+  reviewedAt    DateTime?
+  reviewNote    String?
+  
+  createdAt     DateTime                    @default(now())
+  updatedAt     DateTime                    @updatedAt
+  
+  @@unique([userId, associationId])
+  @@index([userId])
+  @@index([associationId])
+  @@index([status])
+  @@map("association_join_requests")
+}
+
+enum AssociationJoinStatus {
+  PENDING     // 待审核
+  APPROVED    // 已通过
+  REJECTED    // 已拒绝
+}
+
+// 协会成员表
+model AssociationMember {
+  id            String              @id @default(uuid())
+  associationId String
+  association   Association         @relation(fields: [associationId], references: [id], onDelete: Cascade)
+  userId        String
+  user          User                @relation("AssociationMembers", fields: [userId], references: [id], onDelete: Cascade)
+  role          AssociationMemberRole @default(MEMBER)
+  joinedAt      DateTime            @default(now())
+  
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+  
+  @@unique([associationId, userId])
+  @@index([userId])
+  @@index([associationId])
+  @@map("association_members")
+}
+
+enum AssociationMemberRole {
+  ADMIN       // 管理员
+  MEMBER      // 普通成员
 }
 
 // 活动表

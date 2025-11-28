@@ -3,6 +3,7 @@
  */
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { ElMessage } from 'element-plus'
 import NProgress from 'nprogress'
 
 // 路由配置
@@ -109,6 +110,14 @@ const routes: RouteRecordRaw[] = [
               title: '编辑协会',
               hidden: true,
               activeMenu: '/associations/list',
+            },
+          },
+          {
+            path: '/associations/join-requests',
+            name: 'AssociationJoinRequests',
+            component: () => import('@/views/Associations/JoinRequests.vue'),
+            meta: {
+              title: '加入申请',
             },
           },
           {

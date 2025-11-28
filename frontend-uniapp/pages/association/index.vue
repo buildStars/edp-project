@@ -169,6 +169,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { onLoad, onShow } from '@dcloudio/uni-app'
 import { onPullDownRefresh } from '@dcloudio/uni-app'
 import { getAssociationList, getActivityList } from '@/api/association'
 import { formatRelativeTime } from '@/utils/util'
@@ -200,6 +201,26 @@ const clubList = ref([])
 
 // 活动列表
 const activityList = ref([])
+
+// 处理URL参数
+onLoad((options) => {
+  if (options.tab) {
+    currentTab.value = options.tab
+  }
+})
+
+// 页面显示时（用于处理从其他页面切换过来的情况）
+onShow(() => {
+  // 检查是否有tab标记
+  const targetTab = uni.getStorageSync('association_tab')
+  if (targetTab) {
+    currentTab.value = targetTab
+    // 清除标记
+    uni.removeStorageSync('association_tab')
+  }
+  // 加载数据
+  loadData()
+})
 
 // 页面加载
 onMounted(() => {

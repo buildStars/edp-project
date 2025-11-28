@@ -64,7 +64,34 @@ export class TeachersService {
       'TeachersService',
     );
 
-    // 转换课程数据，将 checkinSessions 数组转换为 activeCheckin 对象
+    // 批量获取签到统计
+    const courseIds = courses.map(c => c.id);
+    
+    // 获取每个课程的已签到学员数（去重统计）
+    const checkinStats = await Promise.all(
+      courseIds.map(async (courseId) => {
+        // 获取该课程所有已签到的唯一学员
+        const uniqueUsers = await this.prisma.checkin.findMany({
+          where: {
+            session: {
+              courseId,
+            },
+          },
+          select: {
+            userId: true,
+          },
+          distinct: ['userId'],
+        });
+        
+        return { courseId, checkinCount: uniqueUsers.length };
+      })
+    );
+    
+    const checkinCountMap = new Map(
+      checkinStats.map(item => [item.courseId, item.checkinCount])
+    );
+
+    // 转换课程数据，将 checkinSessions 数组转换为 activeCheckin 对象，并添加统计信息
     const coursesWithActiveCheckin = courses.map((course) => {
       const { checkinSessions, ...rest } = course as any;
       let activeCheckin = null;
@@ -78,9 +105,16 @@ export class TeachersService {
         };
       }
       
+      const enrollmentCount = course._count.enrollments;
+      const checkedInCount = checkinCountMap.get(course.id) || 0;
+      const pendingCheckinCount = Math.max(0, enrollmentCount - checkedInCount);
+      
       return {
         ...rest,
         activeCheckin,
+        enrollmentCount, // 报名学员数量
+        checkedInCount, // 已签到学员数量
+        pendingCheckinCount, // 待签到学员数量
       };
     });
 
@@ -411,19 +445,9 @@ export class TeachersService {
       throw new ForbiddenException('无权访问该课程');
     }
 
-    // 查询所有评价
+    // 查询所有评价（不包含用户信息，保护学生隐私）
     const evaluations = await this.prisma.courseEvaluation.findMany({
       where: { courseId },
-      include: {
-        user: {
-          select: {
-            id: true,
-            realName: true,
-            nickname: true,
-            avatar: true,
-          },
-        },
-      },
       orderBy: { createdAt: 'desc' },
     });
 
@@ -441,6 +465,24 @@ export class TeachersService {
       1: evaluations.filter((e) => e.rating === 1).length,
     };
 
+    // 计算各维度平均分（10分制）
+    const calculateAverage = (field: string) => {
+      const total = evaluations.reduce((sum, e) => sum + (e[field] || 0), 0);
+      return totalCount > 0 ? Math.round((total / totalCount) * 10) / 10 : 0;
+    };
+
+    const dimensionAverages = {
+      attitude1: calculateAverage('attitude1'),
+      attitude2: calculateAverage('attitude2'),
+      content1: calculateAverage('content1'),
+      content2: calculateAverage('content2'),
+      method1: calculateAverage('method1'),
+      method2: calculateAverage('method2'),
+      effect1: calculateAverage('effect1'),
+      effect2: calculateAverage('effect2'),
+      organization: calculateAverage('organization'),
+    };
+
     // 查询总学员数
     const totalStudents = await this.prisma.enrollment.count({
       where: {
@@ -453,32 +495,14 @@ export class TeachersService {
     const evaluationRate =
       totalStudents > 0 ? (totalCount / totalStudents) * 100 : 0;
 
+    // 老师只能看到统计数据，不能看到具体评价详情（匿名保护）
     return {
-      evaluations: evaluations.map((e) => ({
-        id: e.id,
-        rating: e.rating,
-        // 旧的3项评分（保留兼容性）
-        contentRating: e.contentRating,
-        teacherRating: e.teacherRating,
-        // 新的9项详细评分（10分制）
-        attitude1Rating: e.attitude1,
-        attitude2Rating: e.attitude2,
-        content1Rating: e.content1,
-        content2Rating: e.content2,
-        method1Rating: e.method1,
-        method2Rating: e.method2,
-        effect1Rating: e.effect1,
-        effect2Rating: e.effect2,
-        organizationRating: e.organization, // 教务组织评分
-        // 文本建议
-        suggestion: e.suggestion,
-        createdAt: e.createdAt,
-        user: e.user,
-      })),
+      message: '评价数据为匿名评价，教师只能查看统计数据，不能查看具体评价内容',
       statistics: {
         totalCount,
         averageRating: Math.round(averageRating * 10) / 10,
         ratingDistribution,
+        dimensionAverages, // 各维度平均分
         evaluationRate: Math.round(evaluationRate * 100) / 100,
         totalStudents,
       },

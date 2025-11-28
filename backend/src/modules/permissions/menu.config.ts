@@ -1,24 +1,24 @@
 /**
- * 权限配置
- * 定义每个路由对应的权限代码
- * 权限代码必须与后端 prisma/seeds/permissions.seed.ts 中的权限代码保持一致
+ * 后端菜单配置
+ * 统一管理所有菜单项及其权限要求
  */
 
 export interface MenuItem {
-  path: string
-  name: string
-  title: string
-  icon?: string
-  permission?: string // 权限代码
-  children?: MenuItem[]
-  hidden?: boolean
-  hideForRoles?: string[] // 对指定角色隐藏
+  path: string;
+  name: string;
+  title: string;
+  icon?: string;
+  permission?: string; // 所需权限代码
+  roles?: string[]; // 允许的角色列表（如果不设置则根据permission判断）
+  children?: MenuItem[];
+  hidden?: boolean;
 }
 
 /**
- * 菜单配置（带权限）
+ * 完整菜单配置
+ * 由后端统一维护，前端只负责渲染
  */
-export const menuConfig: MenuItem[] = [
+export const MENU_CONFIG: MenuItem[] = [
   {
     path: '/dashboard',
     name: 'Dashboard',
@@ -32,7 +32,7 @@ export const menuConfig: MenuItem[] = [
     title: '资讯管理',
     icon: 'Reading',
     permission: 'news:view',
-    hideForRoles: ['TEACHER'], // 教师不显示
+    roles: ['ADMIN', 'STAFF'], // 只有管理员和教务可见
     children: [
       {
         path: '/news/list',
@@ -48,7 +48,7 @@ export const menuConfig: MenuItem[] = [
     title: '校友生活',
     icon: 'UserFilled',
     permission: 'associations:view',
-    hideForRoles: ['TEACHER'], // 教师不显示
+    roles: ['ADMIN', 'STAFF'],
     children: [
       {
         path: '/associations/list',
@@ -70,7 +70,7 @@ export const menuConfig: MenuItem[] = [
     title: '课程管理',
     icon: 'Reading',
     permission: 'courses:view',
-    hideForRoles: ['TEACHER'], // 教师使用"我的课程"代替
+    roles: ['ADMIN', 'STAFF'],
     children: [
       {
         path: '/courses/list',
@@ -86,7 +86,6 @@ export const menuConfig: MenuItem[] = [
     title: '用户管理',
     icon: 'User',
     permission: 'users:view',
-    // 教师也可以查看用户管理，用于创建和编辑学员
     children: [
       {
         path: '/users/list',
@@ -123,7 +122,7 @@ export const menuConfig: MenuItem[] = [
     title: '报名管理',
     icon: 'Tickets',
     permission: 'enrollments:view',
-    hideForRoles: ['TEACHER'], // 教师不显示报名管理
+    roles: ['ADMIN', 'STAFF'],
     children: [
       {
         path: '/enrollments/list',
@@ -135,14 +134,13 @@ export const menuConfig: MenuItem[] = [
         path: '/enrollments/course-gifts',
         name: 'CourseGifts',
         title: '赠送记录',
-
+        permission: 'course-gifts:view',
       },
       {
         path: '/enrollments/evaluations',
         name: 'Evaluations',
         title: '评价管理',
-
-
+        permission: 'evaluations:view',
       },
     ],
   },
@@ -152,7 +150,7 @@ export const menuConfig: MenuItem[] = [
     title: '课件管理',
     icon: 'FolderOpened',
     permission: 'courseware:view',
-    hideForRoles: ['TEACHER'], // 教师在自己课程中管理课件
+    roles: ['ADMIN', 'STAFF'],
     children: [
       {
         path: '/materials/list',
@@ -168,7 +166,7 @@ export const menuConfig: MenuItem[] = [
     title: '审批管理',
     icon: 'DocumentChecked',
     permission: 'approvals:view',
-    hideForRoles: ['TEACHER'], // 教师不显示审批管理
+    roles: ['ADMIN', 'STAFF'],
     children: [
       {
         path: '/associations/join-requests',
@@ -214,7 +212,7 @@ export const menuConfig: MenuItem[] = [
     title: '系统设置',
     icon: 'Setting',
     permission: 'settings:view',
-    hideForRoles: ['TEACHER'], // 教师不显示系统设置
+    roles: ['ADMIN', 'STAFF'],
     children: [
       {
         path: '/settings/basic',
@@ -242,6 +240,7 @@ export const menuConfig: MenuItem[] = [
     title: '我的课程',
     icon: 'Reading',
     permission: 'my-courses:view',
+    roles: ['TEACHER'], // 只有教师可见
     children: [
       {
         path: '/teacher/courses',
@@ -270,86 +269,5 @@ export const menuConfig: MenuItem[] = [
     icon: 'User',
     // 个人中心不需要权限控制，所有人都能访问
   },
-]
+];
 
-/**
- * 根据用户权限过滤菜单
- * @param menus 菜单配置
- * @param permissions 用户拥有的权限列表
- * @returns 过滤后的菜单
- */
-export function filterMenusByPermissions(
-  menus: MenuItem[],
-  permissions: string[],
-  userRole?: string
-): MenuItem[] {
-  const result: MenuItem[] = []
-
-  for (const menu of menus) {
-    // 检查是否需要对当前角色隐藏
-    if (menu.hideForRoles && userRole && menu.hideForRoles.includes(userRole)) {
-      continue
-    }
-
-    // 如果没有配置权限，则默认显示
-    if (!menu.permission) {
-      const filteredMenu = { ...menu }
-      if (menu.children) {
-        filteredMenu.children = filterMenusByPermissions(menu.children, permissions, userRole)
-        // 如果子菜单全部被过滤，则父菜单也不显示
-        if (filteredMenu.children.length === 0) {
-          continue
-        }
-      }
-      result.push(filteredMenu)
-      continue
-    }
-
-    // 检查用户是否有权限
-    if (permissions.includes(menu.permission)) {
-      const filteredMenu = { ...menu }
-      if (menu.children) {
-        filteredMenu.children = filterMenusByPermissions(menu.children, permissions, userRole)
-      }
-      result.push(filteredMenu)
-    }
-  }
-
-  return result
-}
-
-/**
- * 检查用户是否有指定权限
- * @param permission 权限代码
- * @param permissions 用户拥有的权限列表
- * @returns 是否有权限
- */
-export function hasPermission(permission: string, permissions: string[]): boolean {
-  return permissions.includes(permission)
-}
-
-/**
- * 检查用户是否有任意一个权限
- * @param permissionList 权限代码列表
- * @param permissions 用户拥有的权限列表
- * @returns 是否有权限
- */
-export function hasAnyPermission(
-  permissionList: string[],
-  permissions: string[]
-): boolean {
-  return permissionList.some((permission) => permissions.includes(permission))
-}
-
-/**
- * 检查用户是否拥有所有权限
- * @param permissionList 权限代码列表
- * @param permissions 用户拥有的权限列表
- * @returns 是否有权限
- */
-export function hasAllPermissions(
-  permissionList: string[],
-  permissions: string[]
-): boolean {
-  return permissionList.every((permission) => permissions.includes(permission))
-}

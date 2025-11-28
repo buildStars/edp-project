@@ -54,3 +54,19 @@ export function unlikeActivity(activityId) {
   return del('/api/activities/like', { activityId })
 }
 
+/**
+ * 获取协会加入状态
+ * @param {String|Number} associationId 协会ID
+ */
+export function getAssociationJoinStatus(associationId) {
+  return get(`/api/associations/${associationId}/join-status`)
+}
+
+/**
+ * 申请加入协会
+ * @param {String|Number} associationId 协会ID
+ */
+export function applyToJoinAssociation(associationId) {
+  return post(`/api/associations/${associationId}/apply`)
+}
+

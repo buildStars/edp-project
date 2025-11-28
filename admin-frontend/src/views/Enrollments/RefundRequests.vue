@@ -3,7 +3,7 @@
     <el-card shadow="never">
       <template #header>
         <div class="card-header">
-          <span class="title">退课申请管理</span>
+          <span class="title">取消报名管理</span>
           <el-button type="primary" :icon="Refresh" @click="loadData">刷新</el-button>
         </div>
       </template>
@@ -73,7 +73,7 @@
           </template>
         </el-table-column>
 
-        <el-table-column label="退课原因" min-width="180">
+        <el-table-column label="取消原因" min-width="180">
           <template #default="{ row }">
             <el-text v-if="row.reason" type="info" size="small">
               {{ row.reason }}

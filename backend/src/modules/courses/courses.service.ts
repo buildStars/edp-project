@@ -51,9 +51,47 @@ export class CoursesService {
         skip,
         take: pageSize,
         orderBy: { startTime: 'desc' },
+        include: {
+          _count: {
+            select: {
+              enrollments: {
+                where: {
+                  status: 'ENROLLED', // 只统计已报名的学员
+                },
+              },
+            },
+          },
+        },
       }),
       this.prisma.course.count({ where }),
     ]);
+
+    // 批量获取签到统计
+    const courseIds = list.map(course => course.id);
+    
+    // 获取每个课程的已签到学员数（去重统计）
+    const checkinStats = await Promise.all(
+      courseIds.map(async (courseId) => {
+        // 获取该课程所有已签到的唯一学员
+        const uniqueUsers = await this.prisma.checkin.findMany({
+          where: {
+            session: {
+              courseId,
+            },
+          },
+          select: {
+            userId: true,
+          },
+          distinct: ['userId'],
+        });
+        
+        return { courseId, checkinCount: uniqueUsers.length };
+      })
+    );
+    
+    const checkinCountMap = new Map(
+      checkinStats.map(item => [item.courseId, item.checkinCount])
+    );
 
     // 如果提供了 userId，批量查询报名状态和退课申请状态
     let coursesWithEnrollStatus = list;
@@ -95,6 +133,9 @@ export class CoursesService {
         const enrollmentId = enrollmentMap.get(course.id);
         const isEnrolled = !!enrollmentId;
         const refundStatus = enrollmentId ? refundStatusMap.get(enrollmentId) || null : null;
+        const enrollmentCount = (course as any)._count?.enrollments || 0;
+        const checkedInCount = checkinCountMap.get(course.id) || 0;
+        const pendingCheckinCount = Math.max(0, enrollmentCount - checkedInCount);
         
         return {
           ...course,
@@ -102,16 +143,28 @@ export class CoursesService {
           teacherAvatar: getFullUrl(course.teacherAvatar),
           isEnrolled,
           refundStatus,
+          enrollmentCount, // 报名学员数量
+          checkedInCount, // 已签到学员数量
+          pendingCheckinCount, // 待签到学员数量
         };
       });
     } else {
-      coursesWithEnrollStatus = list.map(course => ({
-        ...course,
-        coverImage: getFullUrl(course.coverImage),
-        teacherAvatar: getFullUrl(course.teacherAvatar),
-        isEnrolled: false,
-        refundStatus: null,
-      }));
+      coursesWithEnrollStatus = list.map(course => {
+        const enrollmentCount = (course as any)._count?.enrollments || 0;
+        const checkedInCount = checkinCountMap.get(course.id) || 0;
+        const pendingCheckinCount = Math.max(0, enrollmentCount - checkedInCount);
+        
+        return {
+          ...course,
+          coverImage: getFullUrl(course.coverImage),
+          teacherAvatar: getFullUrl(course.teacherAvatar),
+          isEnrolled: false,
+          refundStatus: null,
+          enrollmentCount, // 报名学员数量
+          checkedInCount, // 已签到学员数量
+          pendingCheckinCount, // 待签到学员数量
+        };
+      });
     }
 
     return new PaginatedResult(coursesWithEnrollStatus, total, page, pageSize);

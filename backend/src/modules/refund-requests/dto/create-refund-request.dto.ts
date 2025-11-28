@@ -11,6 +11,14 @@ export class CreateRefundRequestDto {
   @IsString()
   @IsOptional()
   reason?: string;
+
+  @ApiPropertyOptional({ description: '是否需要审批（48小时内）' })
+  @IsOptional()
+  needsApproval?: boolean;
+
+  @ApiPropertyOptional({ description: '手续费百分比（48小时外）' })
+  @IsOptional()
+  refundFeePercent?: number;
 }
 
 

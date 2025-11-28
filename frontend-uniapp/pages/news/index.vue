@@ -1,10 +1,5 @@
 <template>
   <view class="page">
-    <!-- 自定义导航栏 -->
-    <custom-navbar title="学校资讯" />
-    
-    <!-- 占位，防止内容被导航栏遮挡 -->
-    <view :style="{ height: navbarHeight + 'px' }"></view>
     
     <!-- 分类导航 -->
     <view class="category-tabs">
@@ -53,12 +48,8 @@
 import { ref, onMounted, computed } from 'vue'
 import { onPullDownRefresh, onReachBottom } from '@dcloudio/uni-app'
 import { useNewsStore } from '@/store/news'
-import CustomNavbar from '@/components/custom-navbar/custom-navbar.vue'
 import NewsCard from '@/components/news-card/news-card.vue'
 import EmptyView from '@/components/empty-view/empty-view.vue'
-
-// 导航栏高度
-const navbarHeight = ref(0)
 
 // 分类列表
 const categories = ref([
@@ -84,9 +75,6 @@ const hasMore = computed(() => newsStore.hasMore)
 
 // 获取系统信息
 onMounted(() => {
-  const systemInfo = uni.getSystemInfoSync()
-  navbarHeight.value = (systemInfo.statusBarHeight || 0) + 44
-  
   // 加载资讯列表
   loadNewsList(true)
 })

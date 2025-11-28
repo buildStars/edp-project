@@ -84,10 +84,12 @@ export class NewsService {
       return null;
     }
 
-    // 增加浏览量
-    await this.prisma.news.update({
+    // 增加浏览量（异步执行，不等待结果）
+    this.prisma.news.update({
       where: { id },
       data: { views: { increment: 1 } },
+    }).catch(error => {
+      this.logger.warn(`更新新闻浏览量失败 - id: ${id}`, 'NewsService');
     });
 
     // 如果提供了 userId，检查是否已收藏

@@ -15,8 +15,10 @@
             <text class="value highlight">{{ course.credit }}</text>
           </view>
           <view class="info-item">
-            <text class="label">剩余天数</text>
-            <text class="value">{{ daysLeft }}天</text>
+            <text class="label">距离开课</text>
+            <text class="value" :class="{ warning: needsApproval }">
+              {{ hoursLeft >= 24 ? Math.floor(hoursLeft / 24) + '天' : Math.floor(hoursLeft) + '小时' }}
+            </text>
           </view>
         </view>
       </view>
@@ -24,10 +26,12 @@
     
     <!-- 退课原因 -->
     <view class="form-section">
-      <view class="section-title">退课原因（可选）</view>
+      <view class="section-title">
+        退课原因{{ needsApproval ? '（必填）' : '（可选）' }}
+      </view>
       <textarea 
         v-model="reason" 
-        placeholder="请填写退课原因，以便我们改进服务..."
+        :placeholder="needsApproval ? '上课前48小时内退课需审批，请填写退课原因...' : '请填写退课原因，以便我们改进服务...'"
         placeholder-class="placeholder"
         :maxlength="200"
       />
@@ -41,17 +45,25 @@
         <text class="icon">✓</text>
         <text class="text">退课成功后将退回 {{ course.credit }} 学分</text>
       </view>
-      <view class="tip-item">
+      <view v-if="needsApproval" class="tip-item warning">
+        <text class="icon">⚠</text>
+        <text class="text">距离开课不足48小时，需要管理员审批</text>
+      </view>
+      <view v-if="needsApproval" class="tip-item">
         <text class="icon">✓</text>
-        <text class="text">提交后需等待管理员审批</text>
+        <text class="text">审批通过后学分将全额退回</text>
+      </view>
+      <view v-if="!needsApproval" class="tip-item">
+        <text class="icon">✓</text>
+        <text class="text">距离开课超过48小时，无需审批自动退课</text>
+      </view>
+      <view v-if="!needsApproval" class="tip-item warning">
+        <text class="icon">⚠</text>
+        <text class="text">将扣除{{ refundFeePercent }}%手续费</text>
       </view>
       <view class="tip-item">
         <text class="icon">✓</text>
-        <text class="text">审批通过后学分将自动退回</text>
-      </view>
-      <view class="tip-item warning">
-        <text class="icon">!</text>
-        <text class="text">开课前3天内不可退课</text>
+        <text class="text">学分退回后可用于报名其他课程</text>
       </view>
     </view>
     
@@ -92,6 +104,23 @@ const daysLeft = computed(() => {
   return Math.max(0, daysDiff)
 })
 
+// 计算剩余小时数
+const hoursLeft = computed(() => {
+  if (!course.value.startTime) return 0
+  const now = new Date()
+  const start = new Date(course.value.startTime)
+  const hoursDiff = (start - now) / (1000 * 60 * 60)
+  return Math.max(0, hoursDiff)
+})
+
+// 是否需要审批（48小时内需要审批）
+const needsApproval = computed(() => {
+  return hoursLeft.value < 48
+})
+
+// 手续费百分比（48小时外退课）
+const refundFeePercent = 5
+
 onLoad(async (options) => {
   courseId.value = options.courseId
   
@@ -101,15 +130,21 @@ onLoad(async (options) => {
     course.value = res
     uni.hideLoading()
     
-    // 检查是否可以退课（开课前3天以外才能退课，即必须 > 3天）
-    if (daysLeft.value <= 3) {
+    // 显示退课规则提示
+    if (needsApproval.value) {
       uni.showModal({
-        title: '不能退课',
-        content: `开课前3天内不能退课，当前距离开课还有${daysLeft.value}天`,
+        title: '退课提示',
+        content: `当前距离开课不足48小时，退课需要提交管理员审批。请填写退课原因后提交申请。`,
         showCancel: false,
-        success: () => {
-          uni.navigateBack()
-        }
+        confirmText: '我知道了'
+      })
+    } else {
+      uni.showModal({
+        title: '退课提示',
+        content: `退课将扣除${refundFeePercent}%手续费，无需审批，学分将自动退回。确认要继续吗？`,
+        showCancel: true,
+        cancelText: '取消',
+        confirmText: '继续'
       })
     }
   } catch (error) {
@@ -126,46 +161,65 @@ onLoad(async (options) => {
 
 // 提交退课申请
 const submitRefund = async () => {
-  // 再次检查是否可以退课（开课前3天以外才能退课，即必须 > 3天）
-  if (daysLeft.value <= 3) {
+  // 如果是48小时内退课，必须填写原因
+  if (needsApproval.value && !reason.value.trim()) {
     uni.showToast({
-      title: `开课前3天内不能退课，当前距离开课还有${daysLeft.value}天`,
+      title: '上课前48小时内退课，请填写退课原因',
       icon: 'none',
       duration: 3000
     })
     return
   }
   
-  try {
-    submitting.value = true
-    
-    await createRefundRequest({
-      enrollmentId: course.value.enrollmentId,
-      reason: reason.value
-    })
-    
-    submitting.value = false
-    
-    uni.showModal({
-      title: '提交成功',
-      content: '退课申请已提交，请等待管理员审批。审批结果将通过消息通知您。',
-      showCancel: false,
-      success: () => {
-        uni.navigateBack({
-          delta: 1,
+  // 二次确认
+  const confirmContent = needsApproval.value
+    ? '退课申请将提交管理员审批，审批通过后学分将退回。确认提交吗？'
+    : `退课将扣除${refundFeePercent}%手续费，学分将自动退回。确认退课吗？`
+  
+  uni.showModal({
+    title: '确认退课',
+    content: confirmContent,
+    success: async (res) => {
+      if (!res.confirm) return
+      
+      try {
+        submitting.value = true
+        
+        await createRefundRequest({
+          enrollmentId: course.value.enrollmentId,
+          reason: reason.value,
+          needsApproval: needsApproval.value,
+          refundFeePercent: needsApproval.value ? 0 : refundFeePercent
+        })
+        
+        submitting.value = false
+        
+        const successContent = needsApproval.value
+          ? '退课申请已提交，请等待管理员审批。审批结果将通过消息通知您。'
+          : `退课成功！已扣除${refundFeePercent}%手续费，学分已自动退回。`
+        
+        uni.showModal({
+          title: '提交成功',
+          content: successContent,
+          showCancel: false,
           success: () => {
-            uni.$emit('refreshCourseDetail')
+            uni.navigateBack({
+              delta: 1,
+              success: () => {
+                uni.$emit('refreshCourseDetail')
+              }
+            })
           }
         })
+      } catch (error) {
+        submitting.value = false
+        uni.showToast({
+          title: error.msg || '提交失败',
+          icon: 'none'
+        })
       }
-    })
-  } catch (error) {
-    submitting.value = false
-    uni.showToast({
-      title: error.msg || '提交失败',
-      icon: 'none'
-    })
-  }
+    }
+  })
 }
 </script>
 

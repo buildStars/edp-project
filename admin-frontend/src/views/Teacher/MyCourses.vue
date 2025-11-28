@@ -2,7 +2,7 @@
   <div class="teacher-courses">
     <!-- 统计卡片 -->
     <el-row :gutter="20" class="stats-row">
-      <el-col :span="6">
+      <el-col :span="12">
         <el-card class="stat-card courses">
           <div class="stat-content">
             <div class="stat-icon">
@@ -15,7 +15,7 @@
           </div>
         </el-card>
       </el-col>
-      <el-col :span="6">
+      <el-col :span="12">
         <el-card class="stat-card active">
           <div class="stat-content">
             <div class="stat-icon">
@@ -28,32 +28,7 @@
           </div>
         </el-card>
       </el-col>
-      <el-col :span="6">
-        <el-card class="stat-card students">
-          <div class="stat-content">
-            <div class="stat-icon">
-              <el-icon :size="40"><UserFilled /></el-icon>
-            </div>
-            <div class="stat-info">
-              <div class="stat-value">{{ statistics.totalStudents }}</div>
-              <div class="stat-label">总学员数</div>
-            </div>
-          </div>
-        </el-card>
-      </el-col>
-      <el-col :span="6">
-        <el-card class="stat-card pending">
-          <div class="stat-content">
-            <div class="stat-icon">
-              <el-icon :size="40"><Clock /></el-icon>
-            </div>
-            <div class="stat-info">
-              <div class="stat-value">{{ statistics.pendingCheckins }}</div>
-              <div class="stat-label">待签到</div>
-            </div>
-          </div>
-        </el-card>
-      </el-col>
+  
     </el-row>
 
     <!-- 课程列表 -->
@@ -97,7 +72,14 @@
         <el-table-column prop="title" label="课程名称" min-width="200" show-overflow-tooltip />
         <el-table-column label="报名人数" width="100" align="center">
           <template #default="{ row }">
-            <el-tag type="success">{{ row._count.enrollments }}</el-tag>
+            <el-tag type="success">{{ row.enrollmentCount || row._count?.enrollments || 0 }}</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="待签到" width="100" align="center">
+          <template #default="{ row }">
+            <el-text :type="(row.pendingCheckinCount || 0) > 0 ? 'warning' : 'success'">
+              {{ row.pendingCheckinCount || 0 }}
+            </el-text>
           </template>
         </el-table-column>
         <el-table-column label="状态" width="100">
@@ -591,6 +573,7 @@ onUnmounted(() => {
 
 <style scoped lang="scss">
 .teacher-courses {
+  padding: 20px;
   .stats-row {
     margin-bottom: 20px;
 

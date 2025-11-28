@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
 import { UserRole } from '@prisma/client';
+import { MENU_CONFIG, MenuItem } from './menu.config';
 
 @Injectable()
 export class PermissionsService {
@@ -79,20 +80,23 @@ export class PermissionsService {
    * @param permissionCodes 权限代码列表
    */
   async updateRolePermissions(role: UserRole, permissionCodes: string[]) {
-    // 1. 获取所有权限的 code -> id 映射
+    // 1. 先去重权限代码
+    const uniquePermissionCodes = Array.from(new Set(permissionCodes));
+    
+    // 2. 获取所有权限的 code -> id 映射
     const allPermissions = await this.prisma.permission.findMany({
       select: { id: true, code: true },
     });
     const permissionMap = new Map<string, string>();
     allPermissions.forEach((p) => permissionMap.set(p.code, p.id));
 
-    // 2. 删除该角色的所有现有权限
+    // 3. 删除该角色的所有现有权限
     await this.prisma.rolePermission.deleteMany({
       where: { role },
     });
 
-    // 3. 创建新的权限关联
-    const validPermissions = permissionCodes
+    // 4. 创建新的权限关联
+    const validPermissions = uniquePermissionCodes
       .map((code) => {
         const permissionId = permissionMap.get(code);
         if (!permissionId) {
@@ -113,12 +117,64 @@ export class PermissionsService {
       });
     }
 
-    // 4. 返回更新后的权限列表
+    // 5. 返回更新后的权限列表
+    const finalPermissions = await this.getRolePermissions(role);
     return {
       role,
-      permissions: await this.getRolePermissions(role),
-      message: `成功为角色 ${role} 配置了 ${validPermissions.length} 个权限`,
+      permissions: finalPermissions,
+      message: `成功为角色 ${role} 配置了 ${finalPermissions.length} 个权限`,
     };
+  }
+
+  /**
+   * 根据用户角色和权限过滤菜单
+   * @param userRole 用户角色
+   * @param permissions 用户拥有的权限列表
+   * @returns 过滤后的菜单配置
+   */
+  async getMenusByRoleAndPermissions(userRole: UserRole, permissions: string[]): Promise<MenuItem[]> {
+    return this.filterMenus(MENU_CONFIG, userRole, permissions);
+  }
+
+  /**
+   * 递归过滤菜单项
+   * @private
+   */
+  private filterMenus(menus: MenuItem[], userRole: UserRole, permissions: string[]): MenuItem[] {
+    const result: MenuItem[] = [];
+
+    for (const menu of menus) {
+      // 1. 检查角色限制
+      if (menu.roles && menu.roles.length > 0) {
+        if (!menu.roles.includes(userRole)) {
+          continue; // 角色不匹配，跳过此菜单
+        }
+      }
+
+      // 2. 检查权限要求
+      if (menu.permission) {
+        if (!permissions.includes(menu.permission)) {
+          continue; // 没有所需权限，跳过此菜单
+        }
+      }
+
+      // 3. 递归过滤子菜单
+      let filteredMenu = { ...menu };
+      if (menu.children && menu.children.length > 0) {
+        const filteredChildren = this.filterMenus(menu.children, userRole, permissions);
+        
+        // 如果子菜单全部被过滤，则父菜单也不显示
+        if (filteredChildren.length === 0) {
+          continue;
+        }
+        
+        filteredMenu.children = filteredChildren;
+      }
+
+      result.push(filteredMenu);
+    }
+
+    return result;
   }
 }
 

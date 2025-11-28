@@ -22,6 +22,7 @@ const permissions = [
   { code: 'associations:create', name: '创建协会', description: '创建新协会', module: 'associations' },
   { code: 'associations:edit', name: '编辑协会', description: '编辑协会信息', module: 'associations' },
   { code: 'associations:delete', name: '删除协会', description: '删除协会', module: 'associations' },
+  { code: 'associations:join-requests', name: '协会加入申请审批', description: '审批协会加入申请', module: 'associations' },
   
   { code: 'activities:view', name: '查看活动', description: '查看活动列表', module: 'associations' },
   { code: 'activities:create', name: '创建活动', description: '创建新活动', module: 'associations' },
@@ -61,6 +62,7 @@ const permissions = [
   // ========== 报名管理 ==========
   { code: 'enrollments:view', name: '查看报名', description: '查看报名记录', module: 'enrollments' },
   { code: 'enrollments:requests', name: '报名申请审核', description: '审核报名申请', module: 'enrollments' },
+  { code: 'trials:view', name: '试听报名申请审批', description: '审批试听报名申请', module: 'enrollments' },
   { code: 'enrollments:refunds', name: '退课申请审核', description: '审核退课申请', module: 'enrollments' },
   { code: 'enrollments:gifts', name: '课程赠送管理', description: '管理课程赠送记录', module: 'enrollments' },
   { code: 'enrollments:checkin', name: '签到管理', description: '管理课程签到', module: 'enrollments' },
@@ -70,6 +72,10 @@ const permissions = [
   { code: 'courseware:view', name: '查看课件', description: '查看课件列表', module: 'courseware' },
   { code: 'courseware:upload', name: '上传课件', description: '上传新课件', module: 'courseware' },
   { code: 'courseware:delete', name: '删除课件', description: '删除课件', module: 'courseware' },
+  
+  // ========== 审批管理 ==========
+  { code: 'approvals:view', name: '查看审批管理', description: '查看审批管理菜单', module: 'approvals' },
+  { code: 'refunds:view', name: '查看退课申请', description: '查看和审批退课申请', module: 'approvals' },
   
   // ========== 学习成果管理 ==========
   { code: 'achievements:view', name: '查看学习成果', description: '查看学习成果记录', module: 'achievements' },
@@ -113,16 +119,17 @@ const rolePermissions = {
   ADMIN: [
     'dashboard:view',
     'news:view', 'news:create', 'news:edit', 'news:delete', 'news:publish',
-    'associations:view', 'associations:create', 'associations:edit', 'associations:delete',
+    'associations:view', 'associations:create', 'associations:edit', 'associations:delete', 'associations:join-requests',
     'activities:view', 'activities:create', 'activities:edit', 'activities:delete',
     'courses:view', 'courses:create', 'courses:edit', 'courses:delete', 'courses:publish', 'courses:approve',
     'chapters:view', 'chapters:manage',
     'users:view', 'users:create', 'users:edit', 'users:delete', 'users:status',
     'advisors:view', 'advisors:assign',
     'organizations:view', 'organizations:create', 'organizations:edit', 'organizations:delete', 'organizations:credits', 'organizations:employees',
-    'enrollments:view', 'enrollments:requests', 'enrollments:refunds', 'enrollments:gifts', 'enrollments:checkin', 'enrollments:evaluation',
+    'enrollments:view', 'enrollments:requests', 'trials:view', 'enrollments:refunds', 'enrollments:gifts', 'enrollments:checkin', 'enrollments:evaluation',
     'courseware:view', 'courseware:upload', 'courseware:delete',
     'achievements:view', 'achievements:issue', 'achievements:batch-issue', 'achievements:students',
+    'approvals:view', 'refunds:view',  // 新增审批管理权限
     'completion:create', 'completion:view', 'completion:review', 'completion:cancel',
     'credits:manage', 'credit-requests:create', 'credit-requests:view', 'credit-requests:review', 'credit-requests:cancel',
     'statistics:view', 'statistics:export',
@@ -133,16 +140,17 @@ const rolePermissions = {
   STAFF: [
     'dashboard:view',
     'news:view', 'news:create', 'news:edit', 'news:delete', 'news:publish',
-    'associations:view', 'associations:create', 'associations:edit', 'associations:delete',
+    'associations:view', 'associations:create', 'associations:edit', 'associations:delete', 'associations:join-requests',
     'activities:view', 'activities:create', 'activities:edit', 'activities:delete',
     'courses:view', 'courses:create', 'courses:edit', 'courses:publish', 'courses:approve', 'courses:assign-teacher',
     'chapters:view', 'chapters:manage',
     'users:view', 'users:create', 'users:edit',  // 新增：users:create（教师功能）
     'advisors:view', 'advisors:assign',
     'organizations:view', 'organizations:create', 'organizations:edit', 'organizations:credits', 'organizations:employees',  // 新增：完整的企业管理权限（教师功能）
-    'enrollments:view', 'enrollments:requests', 'enrollments:refunds', 'enrollments:gifts', 'enrollments:checkin', 'enrollments:evaluation',
+    'enrollments:view', 'enrollments:requests', 'trials:view', 'enrollments:refunds', 'enrollments:gifts', 'enrollments:checkin', 'enrollments:evaluation',
     'courseware:view', 'courseware:upload', 'courseware:delete',
     'achievements:view', 'achievements:issue', 'achievements:batch-issue', 'achievements:students',
+    'approvals:view', 'refunds:view',  // 新增审批管理权限
     'completion:create', 'completion:view', 'completion:review', 'completion:cancel',  // 新增：completion:create, completion:cancel（教师功能）
     'credits:manage', 'credit-requests:create', 'credit-requests:view', 'credit-requests:review', 'credit-requests:cancel',  // 新增：credit-requests:create, credit-requests:cancel（教师功能）
     'statistics:view',
@@ -178,12 +186,9 @@ const rolePermissions = {
     'statistics:view',
   ],
   
-  // 学员：基本查看权限
-  STUDENT: [
-    'dashboard:view',
-    'news:view',
-    'courses:view',
-  ],
+  // 学员：只能使用小程序，无法登录管理后台
+  // 因此不需要配置管理后台权限
+  STUDENT: [],
 };
 
 /**
@@ -191,6 +196,82 @@ const rolePermissions = {
  */
 export async function seedPermissions() {
   console.log('🌱 开始初始化权限数据...');
+
+  try {
+    // 1. 检查权限是否已存在
+    const existingPermissions = await prisma.permission.count();
+    
+    if (existingPermissions > 0) {
+      console.log(`ℹ️  权限数据已存在 (${existingPermissions} 个权限)，跳过初始化`);
+      console.log('💡 如需重置权限，请手动运行: npm run seed:permissions:force');
+      return;
+    }
+
+    console.log('未找到权限数据，开始创建...');
+
+    // 2. 创建权限
+    console.log('创建权限...');
+    const createdPermissions = await Promise.all(
+      permissions.map((permission) =>
+        prisma.permission.create({
+          data: permission,
+        })
+      )
+    );
+    console.log(`✅ 已创建 ${createdPermissions.length} 个权限`);
+
+    // 3. 创建权限映射表（code -> id）
+    const permissionMap = new Map<string, string>();
+    createdPermissions.forEach((permission) => {
+      permissionMap.set(permission.code, permission.id);
+    });
+
+    // 4. 为每个角色分配默认权限
+    console.log('为角色分配默认权限...');
+    let totalAssignments = 0;
+
+    for (const [role, permissionCodes] of Object.entries(rolePermissions)) {
+      const assignments = permissionCodes
+        .map((code) => {
+          const permissionId = permissionMap.get(code);
+          if (!permissionId) {
+            console.warn(`⚠️  警告：未找到权限 ${code}`);
+            return null;
+          }
+          return {
+            role: role as UserRole,
+            permissionId,
+          };
+        })
+        .filter((item) => item !== null);
+
+      await prisma.rolePermission.createMany({
+        data: assignments,
+        skipDuplicates: true,
+      });
+
+      totalAssignments += assignments.length;
+      console.log(`  - ${role}: ${assignments.length} 个权限`);
+    }
+
+    console.log(`✅ 已创建 ${totalAssignments} 个角色权限关联`);
+    console.log('✅ 权限数据初始化完成！');
+    console.log('');
+    console.log('💡 提示：现在可以在【系统设置 > 角色权限】中自定义各角色的权限');
+    console.log('');
+  } catch (error) {
+    console.error('❌ 权限数据初始化失败:', error);
+    throw error;
+  }
+}
+
+/**
+ * 强制重置权限数据（清空并重建）
+ * ⚠️ 警告：此操作会删除所有自定义的权限配置！
+ */
+export async function forceResetPermissions() {
+  console.log('⚠️  强制重置权限数据...');
+  console.log('警告：这将删除所有自定义的权限配置！');
 
   try {
     // 1. 清空现有权限数据
@@ -244,21 +325,21 @@ export async function seedPermissions() {
     }
 
     console.log(`✅ 已创建 ${totalAssignments} 个角色权限关联`);
-  console.log('✅ 权限数据初始化完成！');
-  console.log('');
-  console.log('⚠️  重要提示：权限已更新！');
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log('📢 请通知所有在线用户重新登录以获取最新权限：');
-  console.log('   1️⃣  点击右上角头像');
-  console.log('   2️⃣  选择"退出登录"');
-  console.log('   3️⃣  重新登录');
-  console.log('');
-  console.log('💡 或者在浏览器控制台执行以下命令强制刷新：');
-  console.log('   localStorage.clear(); location.reload();');
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log('');
-} catch (error) {
-    console.error('❌ 权限数据初始化失败:', error);
+    console.log('✅ 权限数据强制重置完成！');
+    console.log('');
+    console.log('⚠️  重要提示：权限已更新！');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('📢 请通知所有在线用户重新登录以获取最新权限：');
+    console.log('   1️⃣  点击右上角头像');
+    console.log('   2️⃣  选择"退出登录"');
+    console.log('   3️⃣  重新登录');
+    console.log('');
+    console.log('💡 或者在浏览器控制台执行以下命令强制刷新：');
+    console.log('   localStorage.clear(); location.reload();');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('');
+  } catch (error) {
+    console.error('❌ 权限数据强制重置失败:', error);
     throw error;
   }
 }

@@ -33,11 +33,33 @@ export class ActivitiesService {
     const page = parseInt(query.page) || 1;
     const pageSize = parseInt(query.pageSize) || 10;
     const associationId = query.associationId;
+    const status = query.status;
+    const keyword = query.keyword;
     
     const skip = (page - 1) * pageSize;
 
-    const where: any = { status: 'PUBLISHED' };
-    if (associationId) where.associationId = associationId;
+    const where: any = {};
+    
+    // 如果指定了状态，则过滤状态（管理后台可以不传status查看所有）
+    if (status) {
+      where.status = status;
+    }
+    
+    // 如果没有指定status，且没有提供userId（说明是公开访问），则只显示已发布
+    // 这样管理后台（有userId）可以看到所有状态
+    if (!status && !userId) {
+      where.status = 'PUBLISHED';
+    }
+    
+    // 协会过滤（允许为null，显示未关联协会的活动）
+    if (associationId) {
+      where.associationId = associationId;
+    }
+    
+    // 关键词搜索
+    if (keyword) {
+      where.title = { contains: keyword };
+    }
 
     const [list, total] = await Promise.all([
       this.prisma.activity.findMany({
@@ -45,6 +67,14 @@ export class ActivitiesService {
         skip,
         take: pageSize,
         orderBy: { publishTime: 'desc' },
+        include: {
+          association: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
       }),
       this.prisma.activity.count({ where }),
     ]);
@@ -78,17 +108,24 @@ export class ActivitiesService {
   }
 
   async findOne(id: string, userId?: string) {
-    await this.prisma.activity.update({
-      where: { id },
-      data: { views: { increment: 1 } },
-    });
-
+    // 先查询活动是否存在
     const activity = await this.prisma.activity.findUnique({
       where: { id },
     });
 
     if (!activity) {
       return null;
+    }
+
+    // 如果存在，增加浏览量
+    try {
+      await this.prisma.activity.update({
+        where: { id },
+        data: { views: { increment: 1 } },
+      });
+    } catch (error) {
+      this.logger.warn(`更新活动浏览量失败 - id: ${id}`, 'ActivitiesService');
+      // 浏览量更新失败不影响查询结果，继续执行
     }
 
     // 解析 images 字段

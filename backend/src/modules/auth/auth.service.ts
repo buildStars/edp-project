@@ -452,9 +452,13 @@ export class AuthService {
     // 获取用户权限
     const permissions = await this.permissionsService.getRolePermissions(user.role);
 
+    // 获取用户菜单（根据角色和权限过滤）
+    const menus = await this.permissionsService.getMenusByRoleAndPermissions(user.role, permissions);
+
     return {
       user,
       permissions,
+      menus, // 返回已过滤的菜单配置
     };
   }
 

@@ -66,4 +66,70 @@ export function batchDeleteAssociation(ids: string[]) {
   return request.post('/associations/batch-delete', { ids })
 }
 
+// ========== 加入申请管理 ==========
+
+// 加入申请状态
+export type JoinRequestStatus = 'PENDING' | 'APPROVED' | 'REJECTED'
+
+// 加入申请查询参数
+export interface JoinRequestQueryParams extends PageParams {
+  associationId?: string
+  userId?: string
+  status?: JoinRequestStatus
+}
+
+// 加入申请详情
+export interface AssociationJoinRequest {
+  id: string
+  userId: string
+  associationId: string
+  status: JoinRequestStatus
+  reason?: string
+  reviewedBy?: string
+  reviewedAt?: string
+  reviewNote?: string
+  createdAt: string
+  updatedAt: string
+  user: {
+    id: string
+    nickname?: string
+    realName?: string
+    avatar?: string
+    phone?: string
+    company?: string
+    position?: string
+  }
+  association: {
+    id: string
+    name: string
+    type: 'ALUMNI' | 'CLUB'
+    logo?: string
+  }
+  reviewer?: {
+    id: string
+    nickname?: string
+    realName?: string
+  }
+}
+
+// 审批参数
+export interface ReviewJoinRequestData {
+  status: 'APPROVED' | 'REJECTED'
+  reviewNote?: string
+}
+
+/**
+ * 获取加入申请列表
+ */
+export function getJoinRequestList(params: JoinRequestQueryParams) {
+  return request.get<PageResult<AssociationJoinRequest>>('/associations/join-requests/list', { params })
+}
+
+/**
+ * 审批加入申请
+ */
+export function reviewJoinRequest(requestId: string, data: ReviewJoinRequestData) {
+  return request.put(`/associations/join-requests/${requestId}/review`, data)
+}
+
 

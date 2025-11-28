@@ -118,12 +118,16 @@ const activeMenu = computed(() => {
 // 用户信息
 const userInfo = computed(() => authStore.userInfo)
 
-// 菜单路由（基于权限过滤）
+// 菜单路由（使用后端返回的菜单配置）
 const menuRoutes = computed(() => {
+  // 优先使用后端返回的菜单配置
+  if (authStore.menus && authStore.menus.length > 0) {
+    return authStore.menus
+  }
+  
+  // 降级方案：使用前端配置并过滤
   const permissions = authStore.permissions || []
   const userRole = authStore.userInfo?.role
-  
-  // 根据用户权限和角色过滤菜单
   return filterMenusByPermissions(menuConfig, permissions, userRole)
 })
 

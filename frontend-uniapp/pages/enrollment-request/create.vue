@@ -82,6 +82,17 @@
       </view>
     </view>
     
+    <!-- 退课规则说明 -->
+    <view class="refund-rule-section">
+      <view class="rule-icon">⚠️</view>
+      <view class="rule-content">
+        <text class="rule-title">退课规则</text>
+        <text class="rule-text">• 上课前48小时以外退课：扣除5%手续费，无需审批</text>
+        <text class="rule-text highlight">• 上课前48小时内退课：需填写退课原因并提交管理员审批</text>
+        <text class="rule-text">• 请合理安排学习计划，避免临时退课</text>
+      </view>
+    </view>
+    
     <!-- 提交按钮 -->
     <view class="footer">
       <button class="btn-submit" @click="submitRequest" :loading="submitting">
@@ -364,6 +375,50 @@ const submitRequest = async () => {
       display: block;
       line-height: 1.6;
       margin-bottom: 6rpx;
+      
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+  }
+}
+
+.refund-rule-section {
+  margin: 24rpx;
+  padding: 24rpx;
+  background: #FFF7E6;
+  border-radius: 16rpx;
+  border: 2rpx solid #FFD591;
+  display: flex;
+  gap: 16rpx;
+  
+  .rule-icon {
+    font-size: 40rpx;
+    flex-shrink: 0;
+  }
+  
+  .rule-content {
+    flex: 1;
+    
+    .rule-title {
+      font-size: 28rpx;
+      font-weight: 600;
+      color: #D46B08;
+      display: block;
+      margin-bottom: 12rpx;
+    }
+    
+    .rule-text {
+      font-size: 24rpx;
+      color: #D48806;
+      display: block;
+      line-height: 1.8;
+      margin-bottom: 8rpx;
+      
+      &.highlight {
+        color: #D4380D;
+        font-weight: 600;
+      }
       
       &:last-child {
         margin-bottom: 0;

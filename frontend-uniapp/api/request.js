@@ -6,7 +6,7 @@
 // 开发环境：本地调试使用localhost（HBuilderX开发时）
 // 生产环境：使用正式域名（H5部署后）
 const BASE_URL = process.env.NODE_ENV === 'development' 
-  ? 'https://edp.yunchuangshuan.com'                    // 开发环境 - 本地调试
+  ? 'http://localhost:3000'                    // 开发环境 - 本地调试
   : 'https://edp.yunchuangshuan.com'           // 生产环境 - 公网域名（HTTPS）
 
 /**
