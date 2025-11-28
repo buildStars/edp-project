@@ -21,7 +21,7 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
     "prisma:seed": "ts-node prisma/seed.ts",
-    "prisma:init": "node prisma/init-production.js",
+    "prisma:init": "prisma db seed",
     "seed:permissions": "ts-node prisma/seeds/permissions.seed.ts",
     "seed:permissions:force": "ts-node prisma/seeds/force-reset-permissions.ts"
   },
