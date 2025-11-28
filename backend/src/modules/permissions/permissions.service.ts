@@ -41,10 +41,10 @@ export class PermissionsService {
   }
 
   /**
-   * 获取菜单配置（用于权限配置页面）
-   * 返回完整的菜单树结构，包含权限信息
+   * 获取菜单配置（用于前端权限树构建）
+   * @returns 菜单配置
    */
-  getMenuConfig() {
+  async getMenuConfig() {
     return MENU_CONFIG;
   }
 

@@ -35,3 +35,10 @@ export function updateRolePermissions(role: string, permissions: string[]) {
   return request.post(`/permissions/roles/${role}`, { permissions })
 }
 
+/**
+ * 获取菜单配置（用于构建权限树）
+ */
+export function getMenuConfig() {
+  return request.get('/permissions/menu-config')
+}
+

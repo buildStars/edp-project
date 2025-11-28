@@ -20,18 +20,17 @@ export class PermissionsController {
     return this.permissionsService.getAllPermissions();
   }
 
+  @Get('menu-config')
+  @ApiOperation({ summary: '获取菜单配置（用于权限树）' })
+  async getMenuConfig() {
+    return this.permissionsService.getMenuConfig();
+  }
+
   @Get('roles')
   @Roles('ADMIN')
   @ApiOperation({ summary: '获取所有角色及其权限' })
   async getAllRolePermissions() {
     return this.permissionsService.getAllRolePermissions();
-  }
-
-  @Get('menus')
-  @Roles('ADMIN')
-  @ApiOperation({ summary: '获取菜单配置（用于权限配置页面）' })
-  async getMenuConfig() {
-    return this.permissionsService.getMenuConfig();
   }
 
   @Get('roles/:role')
