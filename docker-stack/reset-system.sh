@@ -45,7 +45,7 @@ DB_PASSWORD=$(grep MYSQL_ROOT_PASSWORD .env | cut -d '=' -f2)
 
 echo ""
 echo -e "${YELLOW}步骤 1/5: 清空数据表...${NC}"
-docker exec -it edp-mysql mysql -uroot -p${DB_PASSWORD} edp_db -e "
+docker exec edp-mysql mysql -uroot -p${DB_PASSWORD} edp_db -e "
 TRUNCATE TABLE role_permissions;
 TRUNCATE TABLE permissions;
 TRUNCATE TABLE users;
@@ -54,7 +54,7 @@ SELECT '✅ 数据表已清空' as status;
 
 echo ""
 echo -e "${YELLOW}步骤 2/5: 重新初始化权限和管理员...${NC}"
-docker exec -it edp-backend npm run prisma:init
+docker exec edp-backend npm run prisma:init
 
 echo ""
 echo -e "${YELLOW}步骤 3/5: 重启后端服务...${NC}"
@@ -66,7 +66,7 @@ sleep 15
 
 echo ""
 echo -e "${YELLOW}步骤 5/5: 验证初始化结果...${NC}"
-docker exec -it edp-mysql mysql -uroot -p${DB_PASSWORD} edp_db -e "
+docker exec edp-mysql mysql -uroot -p${DB_PASSWORD} edp_db -e "
 SELECT '📊 数据统计' as ''; 
 SELECT 'users' as 'Table', COUNT(*) as 'Count' FROM users
 UNION ALL
@@ -81,7 +81,7 @@ echo -e "${GREEN}✅ 系统重置完成！${NC}"
 echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
 echo -e "${BLUE}📋 管理员账号信息：${NC}"
-docker exec -it edp-mysql mysql -uroot -p${DB_PASSWORD} edp_db -e "
+docker exec edp-mysql mysql -uroot -p${DB_PASSWORD} edp_db -e "
 SELECT phone as '手机号', email as '邮箱', name as '姓名', role as '角色' 
 FROM users WHERE role = 'ADMIN';
 "
