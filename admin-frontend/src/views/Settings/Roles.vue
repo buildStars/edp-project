@@ -118,7 +118,6 @@ import {
   CircleCheck,
 } from '@element-plus/icons-vue'
 import type { ElTree } from 'element-plus'
-import { menuConfig } from '@/config/permissions'
 import { getAllRolePermissions, updateRolePermissions } from '@/api/permission'
 
 // 角色定义（排除学员，因为学员只使用小程序，无法登录管理后台）
@@ -172,67 +171,214 @@ const treeProps = {
 }
 const saving = ref(false)
 
-// 图标映射
-const iconMap: Record<string, any> = {
-  DataLine,
-  Reading,
-  UserFilled,
-  User: UserIcon,
-  OfficeBuilding,
-  Tickets,
-  FolderOpened,
-  Setting,
-  CircleCheck,
-}
-
 /**
  * 构建权限树
- * 注意：这里应该从后端获取完整的权限列表，而不是从前端菜单构建
- * 因为菜单只包含部分权限，很多操作权限（如 create、edit、delete）不会出现在菜单中
+ * 包含所有66个权限（菜单权限 + 操作权限）
  */
 const buildPermissionTree = () => {
-  const tree: any[] = []
-
-  menuConfig.forEach((menu) => {
-    // 跳过个人中心（不需要权限控制）
-    if (menu.path === '/profile') return
-    
-    // 跳过被隐藏的菜单项（在配置权限时应该显示所有权限）
-    // if (menu.hideForRoles) return // 移除此过滤，显示所有菜单权限
-
-    const menuNode: any = {
-      code: menu.permission || menu.path,
-      label: menu.title,
-      icon: menu.icon ? iconMap[menu.icon] : undefined,
+  const tree: any[] = [
+    // ========== 数据统计 ==========
+    {
+      code: 'statistics-module',
+      label: '数据统计',
+      icon: DataLine,
       isModule: true,
-      children: [],
-    }
+      children: [
+        { code: 'dashboard:view', label: '查看首页', isModule: false },
+        { code: 'statistics:view', label: '查看统计', isModule: false },
+        { code: 'statistics:export', label: '导出数据', isModule: false },
+      ],
+    },
+    
+    // ========== 资讯管理 ==========
+    {
+      code: 'news-module',
+      label: '资讯管理',
+      icon: Reading,
+      isModule: true,
+      children: [
+        { code: 'news:view', label: '查看资讯', isModule: false },
+        { code: 'news:create', label: '创建资讯', isModule: false },
+        { code: 'news:edit', label: '编辑资讯', isModule: false },
+        { code: 'news:delete', label: '删除资讯', isModule: false },
+        { code: 'news:publish', label: '发布资讯', isModule: false },
+      ],
+    },
+    
+    // ========== 校友生活 ==========
+    {
+      code: 'associations-module',
+      label: '校友生活',
+      icon: UserFilled,
+      isModule: true,
+      children: [
+        { code: 'associations:view', label: '查看协会', isModule: false },
+        { code: 'associations:create', label: '创建协会', isModule: false },
+        { code: 'associations:edit', label: '编辑协会', isModule: false },
+        { code: 'associations:delete', label: '删除协会', isModule: false },
+        { code: 'activities:view', label: '查看活动', isModule: false },
+        { code: 'activities:create', label: '创建活动', isModule: false },
+        { code: 'activities:edit', label: '编辑活动', isModule: false },
+        { code: 'activities:delete', label: '删除活动', isModule: false },
+      ],
+    },
+    
+    // ========== 课程管理 ==========
+    {
+      code: 'courses-module',
+      label: '课程管理',
+      icon: Reading,
+      isModule: true,
+      children: [
+        { code: 'courses:view', label: '查看课程', isModule: false },
+        { code: 'courses:create', label: '创建课程', isModule: false },
+        { code: 'courses:edit', label: '编辑课程', isModule: false },
+        { code: 'courses:delete', label: '删除课程', isModule: false },
+        { code: 'courses:publish', label: '发布课程', isModule: false },
+        { code: 'courses:approve', label: '审批课程', isModule: false },
+        { code: 'courses:assign-teacher', label: '分配老师', isModule: false },
+        { code: 'chapters:view', label: '查看章节', isModule: false },
+        { code: 'chapters:manage', label: '管理章节', isModule: false },
+      ],
+    },
+    
+    // ========== 用户管理 ==========
+    {
+      code: 'users-module',
+      label: '用户管理',
+      icon: UserIcon,
+      isModule: true,
+      children: [
+        { code: 'users:view', label: '查看用户', isModule: false },
+        { code: 'users:create', label: '创建用户', isModule: false },
+        { code: 'users:edit', label: '编辑用户', isModule: false },
+        { code: 'users:delete', label: '删除用户', isModule: false },
+        { code: 'users:status', label: '修改用户状态', isModule: false },
+        { code: 'advisors:view', label: '查看课程顾问', isModule: false },
+        { code: 'advisors:assign', label: '分配课程顾问', isModule: false },
+      ],
+    },
+    
+    // ========== 企业管理 ==========
+    {
+      code: 'organizations-module',
+      label: '企业管理',
+      icon: OfficeBuilding,
+      isModule: true,
+      children: [
+        { code: 'organizations:view', label: '查看企业', isModule: false },
+        { code: 'organizations:create', label: '创建企业', isModule: false },
+        { code: 'organizations:edit', label: '编辑企业', isModule: false },
+        { code: 'organizations:delete', label: '删除企业', isModule: false },
+        { code: 'organizations:credits', label: '学分管理', isModule: false },
+        { code: 'organizations:employees', label: '员工管理', isModule: false },
+        { code: 'credits:manage', label: '直接学分管理', isModule: false },
+      ],
+    },
+    
+    // ========== 报名管理 ==========
+    {
+      code: 'enrollments-module',
+      label: '报名管理',
+      icon: Tickets,
+      isModule: true,
+      children: [
+        { code: 'enrollments:view', label: '查看报名', isModule: false },
+        { code: 'enrollments:requests', label: '报名申请审核', isModule: false },
+        { code: 'enrollments:refunds', label: '退课申请审核', isModule: false },
+        { code: 'enrollments:gifts', label: '课程赠送管理', isModule: false },
+        { code: 'enrollments:checkin', label: '签到管理', isModule: false },
+        { code: 'enrollments:evaluation', label: '评价管理', isModule: false },
+        { code: 'refunds:view', label: '查看退费申请', isModule: false },
+        { code: 'trials:view', label: '查看试听申请', isModule: false },
+        { code: 'associations:join-requests', label: '协会加入申请', isModule: false },
+      ],
+    },
+    
+    // ========== 课件管理 ==========
+    {
+      code: 'courseware-module',
+      label: '课件管理',
+      icon: FolderOpened,
+      isModule: true,
+      children: [
+        { code: 'courseware:view', label: '查看课件', isModule: false },
+        { code: 'courseware:upload', label: '上传课件', isModule: false },
+        { code: 'courseware:delete', label: '删除课件', isModule: false },
+      ],
+    },
+    
+    // ========== 学习成果管理 ==========
+    {
+      code: 'achievements-module',
+      label: '学习成果管理',
+      icon: CircleCheck,
+      isModule: true,
+      children: [
+        { code: 'achievements:view', label: '查看学习成果', isModule: false },
+        { code: 'achievements:issue', label: '发放学习成果', isModule: false },
+        { code: 'achievements:batch-issue', label: '批量发放学习成果', isModule: false },
+        { code: 'achievements:students', label: '查看学员签到情况', isModule: false },
+      ],
+    },
+    
+    // ========== 结课申请管理 ==========
+    {
+      code: 'completion-module',
+      label: '结课申请管理',
+      icon: CircleCheck,
+      isModule: true,
+      children: [
+        { code: 'completion:create', label: '发起结课申请', isModule: false },
+        { code: 'completion:view', label: '查看结课申请', isModule: false },
+        { code: 'completion:review', label: '审批结课申请', isModule: false },
+        { code: 'completion:cancel', label: '取消结课申请', isModule: false },
+      ],
+    },
+    
+    // ========== 学分申请管理 ==========
+    {
+      code: 'credit-requests-module',
+      label: '学分申请管理',
+      icon: CircleCheck,
+      isModule: true,
+      children: [
+        { code: 'credit-requests:create', label: '创建学分申请', isModule: false },
+        { code: 'credit-requests:view', label: '查看学分申请', isModule: false },
+        { code: 'credit-requests:review', label: '审批学分申请', isModule: false },
+        { code: 'credit-requests:cancel', label: '取消学分申请', isModule: false },
+      ],
+    },
+    
+    // ========== 教师专属 ==========
+    {
+      code: 'teacher-module',
+      label: '教师专属',
+      icon: Reading,
+      isModule: true,
+      children: [
+        { code: 'my-courses:view', label: '查看我的课程', isModule: false },
+        { code: 'my-students:view', label: '查看我的学员', isModule: false },
+      ],
+    },
+    
+    // ========== 系统设置 ==========
+    {
+      code: 'settings-module',
+      label: '系统设置',
+      icon: Setting,
+      isModule: true,
+      children: [
+        { code: 'settings:view', label: '查看设置', isModule: false },
+        { code: 'settings:edit', label: '修改设置', isModule: false },
+        { code: 'settings:roles', label: '角色权限管理', isModule: false },
+        { code: 'permissions:manage', label: '权限管理', isModule: false },
+        { code: 'approvals:view', label: '查看审批', isModule: false },
+      ],
+    },
+  ]
 
-    // 如果有子菜单
-    if (menu.children && menu.children.length > 0) {
-      menu.children.forEach((child) => {
-        if (child.permission) {
-          menuNode.children.push({
-            code: child.permission,
-            label: child.title,
-            isModule: false,
-          })
-        }
-      })
-      // 有子菜单的，添加父节点
-      tree.push(menuNode)
-    } else if (menu.permission) {
-      // 没有子菜单但有权限的独立菜单项，作为叶子节点添加
-      tree.push({
-        code: menu.permission,
-        label: menu.title,
-        icon: menu.icon ? iconMap[menu.icon] : undefined,
-        isModule: true, // 独立菜单项也算作模块级别
-      })
-    }
-  })
-
-  console.log('🌲 权限树构建完成:', tree)
+  console.log('🌲 权限树构建完成 (66个权限):', tree)
   return tree
 }
 
