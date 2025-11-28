@@ -11,26 +11,29 @@ const permissions = [
   { code: 'dashboard:view', name: '查看首页', description: '查看首页概览数据', module: 'dashboard' },
   
   // ========== 资讯管理 ==========
-  { code: 'news:view', name: '查看资讯', description: '查看资讯列表', module: 'news' },
+  { code: 'news:view', name: '资讯管理', description: '资讯管理菜单权限', module: 'news' },
+  { code: 'news:list', name: '资讯列表', description: '查看资讯列表页面', module: 'news' },
   { code: 'news:create', name: '创建资讯', description: '创建新资讯', module: 'news' },
   { code: 'news:edit', name: '编辑资讯', description: '编辑资讯信息', module: 'news' },
   { code: 'news:delete', name: '删除资讯', description: '删除资讯', module: 'news' },
   { code: 'news:publish', name: '发布资讯', description: '发布/下架资讯', module: 'news' },
   
   // ========== 校友生活（协会管理）==========
-  { code: 'associations:view', name: '查看协会', description: '查看协会列表', module: 'associations' },
+  { code: 'associations:view', name: '校友生活', description: '校友生活菜单权限', module: 'associations' },
+  { code: 'associations:list', name: '协会列表', description: '查看协会列表页面', module: 'associations' },
   { code: 'associations:create', name: '创建协会', description: '创建新协会', module: 'associations' },
   { code: 'associations:edit', name: '编辑协会', description: '编辑协会信息', module: 'associations' },
   { code: 'associations:delete', name: '删除协会', description: '删除协会', module: 'associations' },
   { code: 'associations:join-requests', name: '协会加入申请审批', description: '审批协会加入申请', module: 'associations' },
   
-  { code: 'activities:view', name: '查看活动', description: '查看活动列表', module: 'associations' },
+  { code: 'activities:view', name: '活动列表', description: '查看活动列表页面', module: 'associations' },
   { code: 'activities:create', name: '创建活动', description: '创建新活动', module: 'associations' },
   { code: 'activities:edit', name: '编辑活动', description: '编辑活动信息', module: 'associations' },
   { code: 'activities:delete', name: '删除活动', description: '删除活动', module: 'associations' },
   
   // ========== 课程管理 ==========
-  { code: 'courses:view', name: '查看课程', description: '查看课程列表', module: 'courses' },
+  { code: 'courses:view', name: '课程管理', description: '课程管理菜单权限', module: 'courses' },
+  { code: 'courses:list', name: '课程列表', description: '查看课程列表页面', module: 'courses' },
   { code: 'courses:create', name: '创建课程', description: '创建新课程', module: 'courses' },
   { code: 'courses:edit', name: '编辑课程', description: '编辑课程信息', module: 'courses' },
   { code: 'courses:delete', name: '删除课程', description: '删除课程', module: 'courses' },
@@ -42,17 +45,19 @@ const permissions = [
   { code: 'chapters:manage', name: '管理章节', description: '创建、编辑、删除章节', module: 'courses' },
   
   // ========== 用户管理 ==========
-  { code: 'users:view', name: '查看用户', description: '查看用户列表', module: 'users' },
+  { code: 'users:view', name: '用户管理', description: '用户管理菜单权限', module: 'users' },
+  { code: 'users:list', name: '用户列表', description: '查看用户列表页面', module: 'users' },
   { code: 'users:create', name: '创建用户', description: '创建新用户', module: 'users' },
   { code: 'users:edit', name: '编辑用户', description: '编辑用户信息', module: 'users' },
   { code: 'users:delete', name: '删除用户', description: '删除用户', module: 'users' },
   { code: 'users:status', name: '修改用户状态', description: '启用/禁用用户', module: 'users' },
   
-  { code: 'advisors:view', name: '查看课程顾问', description: '查看课程顾问管理', module: 'users' },
+  { code: 'advisors:view', name: '课程顾问', description: '查看课程顾问管理页面', module: 'users' },
   { code: 'advisors:assign', name: '分配课程顾问', description: '为用户分配课程顾问', module: 'users' },
   
   // ========== 企业管理 ==========
-  { code: 'organizations:view', name: '查看企业', description: '查看企业列表', module: 'organizations' },
+  { code: 'organizations:view', name: '企业管理', description: '企业管理菜单权限', module: 'organizations' },
+  { code: 'organizations:list', name: '企业列表', description: '查看企业列表页面', module: 'organizations' },
   { code: 'organizations:create', name: '创建企业', description: '创建新企业', module: 'organizations' },
   { code: 'organizations:edit', name: '编辑企业', description: '编辑企业信息', module: 'organizations' },
   { code: 'organizations:delete', name: '删除企业', description: '删除企业', module: 'organizations' },
@@ -60,16 +65,20 @@ const permissions = [
   { code: 'organizations:employees', name: '员工管理', description: '管理企业员工', module: 'organizations' },
   
   // ========== 报名管理 ==========
-  { code: 'enrollments:view', name: '查看报名', description: '查看报名记录', module: 'enrollments' },
+  { code: 'enrollments:view', name: '报名管理', description: '报名管理菜单权限', module: 'enrollments' },
+  { code: 'enrollments:list', name: '课程报名', description: '查看课程报名页面', module: 'enrollments' },
   { code: 'enrollments:requests', name: '报名申请审核', description: '审核报名申请', module: 'enrollments' },
   { code: 'trials:view', name: '试听报名申请审批', description: '审批试听报名申请', module: 'enrollments' },
   { code: 'enrollments:refunds', name: '退课申请审核', description: '审核退课申请', module: 'enrollments' },
   { code: 'enrollments:gifts', name: '课程赠送管理', description: '管理课程赠送记录', module: 'enrollments' },
   { code: 'enrollments:checkin', name: '签到管理', description: '管理课程签到', module: 'enrollments' },
   { code: 'enrollments:evaluation', name: '评价管理', description: '查看课程评价', module: 'enrollments' },
+  { code: 'course-gifts:view', name: '赠送记录', description: '查看课程赠送记录页面', module: 'enrollments' },
+  { code: 'evaluations:view', name: '评价管理', description: '查看评价管理页面', module: 'enrollments' },
   
   // ========== 课件管理 ==========
-  { code: 'courseware:view', name: '查看课件', description: '查看课件列表', module: 'courseware' },
+  { code: 'courseware:view', name: '课件管理', description: '课件管理菜单权限', module: 'courseware' },
+  { code: 'courseware:list', name: '课件列表', description: '查看课件列表页面', module: 'courseware' },
   { code: 'courseware:upload', name: '上传课件', description: '上传新课件', module: 'courseware' },
   { code: 'courseware:delete', name: '删除课件', description: '删除课件', module: 'courseware' },
   
@@ -97,7 +106,8 @@ const permissions = [
   { code: 'credit-requests:cancel', name: '取消学分申请', description: '取消学分申请', module: 'credits' },
   
   // ========== 教师专属 ==========
-  { code: 'my-courses:view', name: '查看我的课程', description: '查看教师自己的课程列表', module: 'teacher' },
+  { code: 'my-courses:view', name: '我的课程', description: '我的课程菜单权限', module: 'teacher' },
+  { code: 'my-courses:list', name: '课程列表', description: '查看我的课程列表页面', module: 'teacher' },
   { code: 'my-students:view', name: '查看我的学员', description: '查看教师自己的学员列表', module: 'teacher' },
   
   // ========== 数据统计 ==========
@@ -105,9 +115,11 @@ const permissions = [
   { code: 'statistics:export', name: '导出数据', description: '导出统计数据', module: 'statistics' },
   
   // ========== 系统设置 ==========
-  { code: 'settings:view', name: '查看设置', description: '查看系统设置', module: 'settings' },
+  { code: 'settings:view', name: '系统设置', description: '系统设置菜单权限', module: 'settings' },
+  { code: 'settings:basic', name: '基础设置', description: '查看基础设置页面', module: 'settings' },
+  { code: 'settings:ai-config', name: 'AI配置', description: '查看AI配置页面', module: 'settings' },
   { code: 'settings:edit', name: '修改设置', description: '修改系统设置', module: 'settings' },
-  { code: 'permissions:manage', name: '权限管理', description: '管理角色和权限', module: 'settings' },
+  { code: 'permissions:manage', name: '角色权限', description: '管理角色和权限', module: 'settings' },
 ];
 
 /**
@@ -115,74 +127,77 @@ const permissions = [
  * 定义每个角色拥有的权限
  */
 const rolePermissions = {
-  // 超级管理员：拥有所有权限
+  // 超级管理员：拥有所有权限（包含所有菜单和操作权限）
   ADMIN: [
     'dashboard:view',
-    'news:view', 'news:create', 'news:edit', 'news:delete', 'news:publish',
-    'associations:view', 'associations:create', 'associations:edit', 'associations:delete', 'associations:join-requests',
+    'news:view', 'news:list', 'news:create', 'news:edit', 'news:delete', 'news:publish',
+    'associations:view', 'associations:list', 'associations:create', 'associations:edit', 'associations:delete', 'associations:join-requests',
     'activities:view', 'activities:create', 'activities:edit', 'activities:delete',
-    'courses:view', 'courses:create', 'courses:edit', 'courses:delete', 'courses:publish', 'courses:approve',
+    'courses:view', 'courses:list', 'courses:create', 'courses:edit', 'courses:delete', 'courses:publish', 'courses:approve',
     'chapters:view', 'chapters:manage',
-    'users:view', 'users:create', 'users:edit', 'users:delete', 'users:status',
+    'users:view', 'users:list', 'users:create', 'users:edit', 'users:delete', 'users:status',
     'advisors:view', 'advisors:assign',
-    'organizations:view', 'organizations:create', 'organizations:edit', 'organizations:delete', 'organizations:credits', 'organizations:employees',
-    'enrollments:view', 'enrollments:requests', 'trials:view', 'enrollments:refunds', 'enrollments:gifts', 'enrollments:checkin', 'enrollments:evaluation',
-    'courseware:view', 'courseware:upload', 'courseware:delete',
+    'organizations:view', 'organizations:list', 'organizations:create', 'organizations:edit', 'organizations:delete', 'organizations:credits', 'organizations:employees',
+    'enrollments:view', 'enrollments:list', 'enrollments:requests', 'trials:view', 'enrollments:refunds', 'enrollments:gifts', 'enrollments:checkin', 'enrollments:evaluation',
+    'course-gifts:view', 'evaluations:view',
+    'courseware:view', 'courseware:list', 'courseware:upload', 'courseware:delete',
     'achievements:view', 'achievements:issue', 'achievements:batch-issue', 'achievements:students',
-    'approvals:view', 'refunds:view',  // 新增审批管理权限
+    'approvals:view', 'refunds:view',
     'completion:create', 'completion:view', 'completion:review', 'completion:cancel',
     'credits:manage', 'credit-requests:create', 'credit-requests:view', 'credit-requests:review', 'credit-requests:cancel',
     'statistics:view', 'statistics:export',
-    'settings:view', 'settings:edit', 'permissions:manage',
+    'settings:view', 'settings:basic', 'settings:ai-config', 'settings:edit', 'permissions:manage',
+    'my-courses:view', 'my-courses:list',
   ],
   
-  // 教务人员：负责课程、报名、协会等运营工作（包含教师的所有功能）
+  // 教务人员：负责课程、报名、协会等运营工作（包含所有菜单和操作权限，除了权限管理）
   STAFF: [
     'dashboard:view',
-    'news:view', 'news:create', 'news:edit', 'news:delete', 'news:publish',
-    'associations:view', 'associations:create', 'associations:edit', 'associations:delete', 'associations:join-requests',
+    'news:view', 'news:list', 'news:create', 'news:edit', 'news:delete', 'news:publish',
+    'associations:view', 'associations:list', 'associations:create', 'associations:edit', 'associations:delete', 'associations:join-requests',
     'activities:view', 'activities:create', 'activities:edit', 'activities:delete',
-    'courses:view', 'courses:create', 'courses:edit', 'courses:publish', 'courses:approve', 'courses:assign-teacher',
+    'courses:view', 'courses:list', 'courses:create', 'courses:edit', 'courses:publish', 'courses:approve', 'courses:assign-teacher',
     'chapters:view', 'chapters:manage',
-    'users:view', 'users:create', 'users:edit',  // 新增：users:create（教师功能）
+    'users:view', 'users:list', 'users:create', 'users:edit',
     'advisors:view', 'advisors:assign',
-    'organizations:view', 'organizations:create', 'organizations:edit', 'organizations:credits', 'organizations:employees',  // 新增：完整的企业管理权限（教师功能）
-    'enrollments:view', 'enrollments:requests', 'trials:view', 'enrollments:refunds', 'enrollments:gifts', 'enrollments:checkin', 'enrollments:evaluation',
-    'courseware:view', 'courseware:upload', 'courseware:delete',
+    'organizations:view', 'organizations:list', 'organizations:create', 'organizations:edit', 'organizations:credits', 'organizations:employees',
+    'enrollments:view', 'enrollments:list', 'enrollments:requests', 'trials:view', 'enrollments:refunds', 'enrollments:gifts', 'enrollments:checkin', 'enrollments:evaluation',
+    'course-gifts:view', 'evaluations:view',
+    'courseware:view', 'courseware:list', 'courseware:upload', 'courseware:delete',
     'achievements:view', 'achievements:issue', 'achievements:batch-issue', 'achievements:students',
-    'approvals:view', 'refunds:view',  // 新增审批管理权限
-    'completion:create', 'completion:view', 'completion:review', 'completion:cancel',  // 新增：completion:create, completion:cancel（教师功能）
-    'credits:manage', 'credit-requests:create', 'credit-requests:view', 'credit-requests:review', 'credit-requests:cancel',  // 新增：credit-requests:create, credit-requests:cancel（教师功能）
+    'approvals:view', 'refunds:view',
+    'completion:create', 'completion:view', 'completion:review', 'completion:cancel',
+    'credits:manage', 'credit-requests:create', 'credit-requests:view', 'credit-requests:review', 'credit-requests:cancel',
     'statistics:view',
-    // 教师专属视图
-    'my-courses:view',    // 新增：查看我的课程（教师功能）
-    'my-students:view',   // 新增：查看我的学员（教师功能）
+    'settings:view', 'settings:basic', 'settings:ai-config',
+    'my-courses:view', 'my-courses:list',
+    'my-students:view',
   ],
   
   // 教师：可以创建和编辑课程，但只能保存为草稿或提交审批
   TEACHER: [
     'dashboard:view',
-    'my-courses:view',           // 查看我的课程
-    'my-students:view',          // 查看我的学员
-    'courses:view', 'courses:create', 'courses:edit',
+    'my-courses:view', 'my-courses:list',
+    'my-students:view',
+    'courses:view', 'courses:list', 'courses:create', 'courses:edit',
     'chapters:view', 'chapters:manage',
-    'users:view', 'users:create', 'users:edit',  // 可以创建和编辑学员
-    'organizations:view', 'organizations:create', 'organizations:edit', 'organizations:credits', 'organizations:employees',  // 企业管理权限
-    'enrollments:view', 'enrollments:requests', 'enrollments:refunds', 'enrollments:checkin', 'enrollments:evaluation',
-    'courseware:view', 'courseware:upload', 'courseware:delete',
-    'achievements:view', 'achievements:issue', 'achievements:students',  // 教师可以查看和发放学习成果
-    'completion:create', 'completion:view', 'completion:cancel',  // 教师可以发起和取消结课申请
-    'credit-requests:create', 'credit-requests:view', 'credit-requests:cancel',  // 教师可以创建和查看学分申请
+    'users:view', 'users:list', 'users:create', 'users:edit',
+    'organizations:view', 'organizations:list', 'organizations:create', 'organizations:edit', 'organizations:credits', 'organizations:employees',
+    'enrollments:view', 'enrollments:list', 'enrollments:requests', 'enrollments:refunds', 'enrollments:checkin', 'enrollments:evaluation',
+    'courseware:view', 'courseware:list', 'courseware:upload', 'courseware:delete',
+    'achievements:view', 'achievements:issue', 'achievements:students',
+    'completion:create', 'completion:view', 'completion:cancel',
+    'credit-requests:create', 'credit-requests:view', 'credit-requests:cancel',
     'statistics:view',
   ],
   
   // 课程顾问：主要负责学员管理和咨询
   ADVISOR: [
     'dashboard:view',
-    'news:view',
-    'courses:view',
-    'users:view', 'users:edit',
-    'enrollments:view',
+    'news:view', 'news:list',
+    'courses:view', 'courses:list',
+    'users:view', 'users:list', 'users:edit',
+    'enrollments:view', 'enrollments:list',
     'statistics:view',
   ],
   

@@ -73,7 +73,6 @@
         :props="treeProps"
         show-checkbox
         node-key="code"
-        :default-checked-keys="checkedPermissions"
         :default-expanded-keys="expandedKeys"
         class="permission-tree"
       >
@@ -101,8 +100,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { useAuthStore } from '@/stores/auth'
 import {
   User as UserIcon,
   UserFilled,
@@ -118,7 +118,7 @@ import {
   CircleCheck,
 } from '@element-plus/icons-vue'
 import type { ElTree } from 'element-plus'
-import { getAllRolePermissions, updateRolePermissions } from '@/api/permission'
+import { getAllPermissions, getAllRolePermissions, updateRolePermissions, getMenuConfig } from '@/api/permission'
 
 // 角色定义（排除学员，因为学员只使用小程序，无法登录管理后台）
 const roles = ref([
@@ -171,215 +171,142 @@ const treeProps = {
 }
 const saving = ref(false)
 
-/**
- * 构建权限树
- * 包含所有66个权限（菜单权限 + 操作权限）
- */
-const buildPermissionTree = () => {
-  const tree: any[] = [
-    // ========== 数据统计 ==========
-    {
-      code: 'statistics-module',
-      label: '数据统计',
-      icon: DataLine,
-      isModule: true,
-      children: [
-        { code: 'dashboard:view', label: '查看首页', isModule: false },
-        { code: 'statistics:view', label: '查看统计', isModule: false },
-        { code: 'statistics:export', label: '导出数据', isModule: false },
-      ],
-    },
-    
-    // ========== 资讯管理 ==========
-    {
-      code: 'news-module',
-      label: '资讯管理',
-      icon: Reading,
-      isModule: true,
-      children: [
-        { code: 'news:view', label: '查看资讯', isModule: false },
-        { code: 'news:create', label: '创建资讯', isModule: false },
-        { code: 'news:edit', label: '编辑资讯', isModule: false },
-        { code: 'news:delete', label: '删除资讯', isModule: false },
-        { code: 'news:publish', label: '发布资讯', isModule: false },
-      ],
-    },
-    
-    // ========== 校友生活 ==========
-    {
-      code: 'associations-module',
-      label: '校友生活',
-      icon: UserFilled,
-      isModule: true,
-      children: [
-        { code: 'associations:view', label: '查看协会', isModule: false },
-        { code: 'associations:create', label: '创建协会', isModule: false },
-        { code: 'associations:edit', label: '编辑协会', isModule: false },
-        { code: 'associations:delete', label: '删除协会', isModule: false },
-        { code: 'activities:view', label: '查看活动', isModule: false },
-        { code: 'activities:create', label: '创建活动', isModule: false },
-        { code: 'activities:edit', label: '编辑活动', isModule: false },
-        { code: 'activities:delete', label: '删除活动', isModule: false },
-      ],
-    },
-    
-    // ========== 课程管理 ==========
-    {
-      code: 'courses-module',
-      label: '课程管理',
-      icon: Reading,
-      isModule: true,
-      children: [
-        { code: 'courses:view', label: '查看课程', isModule: false },
-        { code: 'courses:create', label: '创建课程', isModule: false },
-        { code: 'courses:edit', label: '编辑课程', isModule: false },
-        { code: 'courses:delete', label: '删除课程', isModule: false },
-        { code: 'courses:publish', label: '发布课程', isModule: false },
-        { code: 'courses:approve', label: '审批课程', isModule: false },
-        { code: 'courses:assign-teacher', label: '分配老师', isModule: false },
-        { code: 'chapters:view', label: '查看章节', isModule: false },
-        { code: 'chapters:manage', label: '管理章节', isModule: false },
-      ],
-    },
-    
-    // ========== 用户管理 ==========
-    {
-      code: 'users-module',
-      label: '用户管理',
-      icon: UserIcon,
-      isModule: true,
-      children: [
-        { code: 'users:view', label: '查看用户', isModule: false },
-        { code: 'users:create', label: '创建用户', isModule: false },
-        { code: 'users:edit', label: '编辑用户', isModule: false },
-        { code: 'users:delete', label: '删除用户', isModule: false },
-        { code: 'users:status', label: '修改用户状态', isModule: false },
-        { code: 'advisors:view', label: '查看课程顾问', isModule: false },
-        { code: 'advisors:assign', label: '分配课程顾问', isModule: false },
-      ],
-    },
-    
-    // ========== 企业管理 ==========
-    {
-      code: 'organizations-module',
-      label: '企业管理',
-      icon: OfficeBuilding,
-      isModule: true,
-      children: [
-        { code: 'organizations:view', label: '查看企业', isModule: false },
-        { code: 'organizations:create', label: '创建企业', isModule: false },
-        { code: 'organizations:edit', label: '编辑企业', isModule: false },
-        { code: 'organizations:delete', label: '删除企业', isModule: false },
-        { code: 'organizations:credits', label: '学分管理', isModule: false },
-        { code: 'organizations:employees', label: '员工管理', isModule: false },
-        { code: 'credits:manage', label: '直接学分管理', isModule: false },
-      ],
-    },
-    
-    // ========== 报名管理 ==========
-    {
-      code: 'enrollments-module',
-      label: '报名管理',
-      icon: Tickets,
-      isModule: true,
-      children: [
-        { code: 'enrollments:view', label: '查看报名', isModule: false },
-        { code: 'enrollments:requests', label: '报名申请审核', isModule: false },
-        { code: 'enrollments:refunds', label: '退课申请审核', isModule: false },
-        { code: 'enrollments:gifts', label: '课程赠送管理', isModule: false },
-        { code: 'enrollments:checkin', label: '签到管理', isModule: false },
-        { code: 'enrollments:evaluation', label: '评价管理', isModule: false },
-        { code: 'refunds:view', label: '查看退费申请', isModule: false },
-        { code: 'trials:view', label: '查看试听申请', isModule: false },
-        { code: 'associations:join-requests', label: '协会加入申请', isModule: false },
-      ],
-    },
-    
-    // ========== 课件管理 ==========
-    {
-      code: 'courseware-module',
-      label: '课件管理',
-      icon: FolderOpened,
-      isModule: true,
-      children: [
-        { code: 'courseware:view', label: '查看课件', isModule: false },
-        { code: 'courseware:upload', label: '上传课件', isModule: false },
-        { code: 'courseware:delete', label: '删除课件', isModule: false },
-      ],
-    },
-    
-    // ========== 学习成果管理 ==========
-    {
-      code: 'achievements-module',
-      label: '学习成果管理',
-      icon: CircleCheck,
-      isModule: true,
-      children: [
-        { code: 'achievements:view', label: '查看学习成果', isModule: false },
-        { code: 'achievements:issue', label: '发放学习成果', isModule: false },
-        { code: 'achievements:batch-issue', label: '批量发放学习成果', isModule: false },
-        { code: 'achievements:students', label: '查看学员签到情况', isModule: false },
-      ],
-    },
-    
-    // ========== 结课申请管理 ==========
-    {
-      code: 'completion-module',
-      label: '结课申请管理',
-      icon: CircleCheck,
-      isModule: true,
-      children: [
-        { code: 'completion:create', label: '发起结课申请', isModule: false },
-        { code: 'completion:view', label: '查看结课申请', isModule: false },
-        { code: 'completion:review', label: '审批结课申请', isModule: false },
-        { code: 'completion:cancel', label: '取消结课申请', isModule: false },
-      ],
-    },
-    
-    // ========== 学分申请管理 ==========
-    {
-      code: 'credit-requests-module',
-      label: '学分申请管理',
-      icon: CircleCheck,
-      isModule: true,
-      children: [
-        { code: 'credit-requests:create', label: '创建学分申请', isModule: false },
-        { code: 'credit-requests:view', label: '查看学分申请', isModule: false },
-        { code: 'credit-requests:review', label: '审批学分申请', isModule: false },
-        { code: 'credit-requests:cancel', label: '取消学分申请', isModule: false },
-      ],
-    },
-    
-    // ========== 教师专属 ==========
-    {
-      code: 'teacher-module',
-      label: '教师专属',
-      icon: Reading,
-      isModule: true,
-      children: [
-        { code: 'my-courses:view', label: '查看我的课程', isModule: false },
-        { code: 'my-students:view', label: '查看我的学员', isModule: false },
-      ],
-    },
-    
-    // ========== 系统设置 ==========
-    {
-      code: 'settings-module',
-      label: '系统设置',
-      icon: Setting,
-      isModule: true,
-      children: [
-        { code: 'settings:view', label: '查看设置', isModule: false },
-        { code: 'settings:edit', label: '修改设置', isModule: false },
-        { code: 'settings:roles', label: '角色权限管理', isModule: false },
-        { code: 'permissions:manage', label: '权限管理', isModule: false },
-        { code: 'approvals:view', label: '查看审批', isModule: false },
-      ],
-    },
-  ]
+// 模块图标映射
+const moduleIconMap: Record<string, any> = {
+  dashboard: DataLine,
+  news: Reading,
+  associations: UserFilled,
+  courses: Reading,
+  users: UserIcon,
+  organizations: OfficeBuilding,
+  enrollments: Tickets,
+  courseware: FolderOpened,
+  achievements: CircleCheck,
+  completion: CircleCheck,
+  credits: CircleCheck,
+  approvals: CircleCheck,
+  teacher: Reading,
+  statistics: DataLine,
+  settings: Setting,
+}
 
-  console.log('🌲 权限树构建完成 (66个权限):', tree)
-  return tree
+// 模块名称映射
+const moduleNameMap: Record<string, string> = {
+  dashboard: '首页概览',
+  news: '资讯管理',
+  associations: '校友生活',
+  courses: '课程管理',
+  users: '用户管理',
+  organizations: '企业管理',
+  enrollments: '报名管理',
+  courseware: '课件管理',
+  achievements: '学习成果管理',
+  completion: '结课申请',
+  credits: '学分管理',
+  approvals: '审批管理',
+  teacher: '教师专属',
+  statistics: '数据统计',
+  settings: '系统设置',
+}
+
+/**
+ * 从后端菜单配置构建权限树
+ * 直接使用后端的菜单结构，只显示菜单权限
+ */
+const buildPermissionTree = async () => {
+  try {
+    const response = await getMenuConfig()
+    console.log('🔍 后端菜单配置:', response)
+    
+    // 兼容不同的响应格式
+    const menus = Array.isArray(response.data) 
+      ? response.data 
+      : Array.isArray(response) 
+        ? response 
+        : []
+    
+    console.log('📦 解析后的菜单配置:', menus)
+    
+    const tree: any[] = []
+
+    menus.forEach((menu: any) => {
+      // 跳过没有权限要求的菜单（如个人中心）
+      if (!menu.permission) return
+
+      const node: any = {
+        code: menu.permission,
+        label: menu.title,
+        icon: moduleIconMap[menu.icon] || moduleIconMap[menu.permission?.split(':')[0]],
+        isModule: !!menu.children,
+        children: [],
+      }
+
+      // 如果有子菜单，添加子菜单权限
+      if (menu.children && menu.children.length > 0) {
+        node.children = menu.children
+          .filter((child: any) => child.permission) // 只要有权限的子菜单
+          .map((child: any) => ({
+            code: child.permission,
+            label: child.title,
+            isModule: false,
+          }))
+      }
+
+      tree.push(node)
+    })
+    
+    console.log('🌲 从后端菜单配置构建权限树 (' + tree.length + '个模块):', tree)
+    return tree
+  } catch (error) {
+    console.error('❌ 构建权限树失败:', error)
+    return []
+  }
+}
+
+/**
+ * 获取权限树中的所有权限代码（用于过滤后端返回的权限）
+ */
+const getTreePermissionCodes = () => {
+  const codes: string[] = []
+  
+  const traverse = (nodes: any[]) => {
+    nodes.forEach(node => {
+      // 只收集实际的权限代码，跳过模块级别的虚拟节点
+      if (node.code && !node.code.endsWith('-module')) {
+        codes.push(node.code)
+      }
+      if (node.children) {
+        traverse(node.children)
+      }
+    })
+  }
+  
+  traverse(permissionTree.value)
+  return codes
+}
+
+/**
+ * 获取权限树中的所有叶子节点权限代码
+ */
+const getLeafPermissions = (nodes: any[]): string[] => {
+  const leafCodes: string[] = []
+  
+  const traverse = (nodes: any[]) => {
+    nodes.forEach(node => {
+      if (node.children && node.children.length > 0) {
+        // 有子节点，继续遍历
+        traverse(node.children)
+      } else {
+        // 没有子节点，是叶子节点
+        if (node.code && !node.code.endsWith('-module')) {
+          leafCodes.push(node.code)
+        }
+      }
+    })
+  }
+  
+  traverse(nodes)
+  return leafCodes
 }
 
 // 角色权限数据（从后端加载）
@@ -401,7 +328,7 @@ const loadRolePermissions = async () => {
       })
     }
 
-    // 更新角色卡片的权限数量（只统计view权限，即菜单访问权限）
+    // 更新角色卡片的权限数量（统计 :view 后缀的权限，即菜单访问权限）
     roles.value.forEach((role) => {
       const permissions = rolePermissionsData.value[role.key] || []
       // 只统计以 :view 结尾的权限（菜单访问权限）
@@ -426,19 +353,47 @@ const getRolePermissions = (roleKey: string): string[] => {
 /**
  * 选择角色
  */
-const handleSelectRole = (roleKey: string) => {
+const handleSelectRole = async (roleKey: string) => {
   selectedRole.value = roleKey
-  checkedPermissions.value = getRolePermissions(roleKey)
+  const allPermissions = getRolePermissions(roleKey)
+  
+  // 只保留权限树中存在的权限（过滤掉操作权限，只保留菜单权限）
+  const treePermissionCodes = getTreePermissionCodes()
+  const filteredPermissions = allPermissions.filter(p => treePermissionCodes.includes(p))
+  
+  console.log(`🔍 角色 ${roleKey} 的权限过滤:`)
+  console.log('  - 后端返回权限数:', allPermissions.length)
+  console.log('  - 权限树中的权限数:', treePermissionCodes.length)
+  console.log('  - 过滤后显示的权限数:', filteredPermissions.length)
+  console.log('  - 过滤后的权限:', filteredPermissions)
+  
+  checkedPermissions.value = filteredPermissions
   
   // 展开所有节点
   expandedKeys.value = permissionTree.value.map((item) => item.code)
 
-  // 设置树的选中状态
-  setTimeout(() => {
-    if (permissionTreeRef.value) {
-      permissionTreeRef.value.setCheckedKeys(checkedPermissions.value)
-    }
-  }, 0)
+  // 等待 DOM 更新完成后再设置选中状态
+  await nextTick()
+  
+  if (permissionTreeRef.value) {
+    // 先清空选中状态
+    permissionTreeRef.value.setCheckedKeys([])
+    
+    // 再次等待 DOM 更新
+    await nextTick()
+    
+    // 只设置叶子节点（子菜单）的权限，避免设置父节点导致所有子节点被勾选
+    // 获取所有叶子节点的权限代码
+    const leafPermissions = getLeafPermissions(permissionTree.value)
+    const checkedLeafPermissions = filteredPermissions.filter(p => leafPermissions.includes(p))
+    
+    console.log('  - 叶子节点权限:', checkedLeafPermissions)
+    
+    // 设置新的选中状态（只设置叶子节点）
+    permissionTreeRef.value.setCheckedKeys(checkedLeafPermissions)
+    
+    console.log('✅ 已设置权限树选中状态:', filteredPermissions.length, '个权限')
+  }
 }
 
 /**
@@ -459,10 +414,26 @@ const handleReset = async () => {
     // 重新加载角色权限
     await loadRolePermissions()
     
-    // 重新设置当前角色的权限
-    const permissions = getRolePermissions(selectedRole.value)
-    checkedPermissions.value = permissions
-    permissionTreeRef.value?.setCheckedKeys(permissions)
+    // 重新设置当前角色的权限（过滤后）
+    const allPermissions = getRolePermissions(selectedRole.value)
+    const treePermissionCodes = getTreePermissionCodes()
+    const filteredPermissions = allPermissions.filter(p => treePermissionCodes.includes(p))
+    
+    checkedPermissions.value = filteredPermissions
+    
+    // 等待 DOM 更新完成后再设置选中状态
+    await nextTick()
+    
+    if (permissionTreeRef.value) {
+      // 先清空选中状态
+      permissionTreeRef.value.setCheckedKeys([])
+      
+      // 再次等待 DOM 更新
+      await nextTick()
+      
+      // 设置新的选中状态
+      permissionTreeRef.value.setCheckedKeys(filteredPermissions)
+    }
     
     ElMessage.success('已重置权限配置')
   } catch (error) {
@@ -479,22 +450,23 @@ const handleSave = async () => {
   const checkedKeys = permissionTreeRef.value.getCheckedKeys() as string[]
   const halfCheckedKeys = permissionTreeRef.value.getHalfCheckedKeys() as string[]
   
-  // 合并并去重（防止父节点和子节点的权限代码重复）
-  const allKeys = Array.from(new Set([...checkedKeys, ...halfCheckedKeys]))
+  // 用户选中的菜单权限（包括完全勾选的节点和半勾选的父节点）
+  const selectedMenuPermissions = Array.from(new Set([...checkedKeys, ...halfCheckedKeys]))
 
   // 调试日志
   console.log('🔍 保存权限配置:')
-  console.log('  - 完全选中的节点:', checkedKeys)
-  console.log('  - 半选中的节点:', halfCheckedKeys)
-  console.log('  - 合并后的权限:', allKeys)
+  console.log('  - 完全勾选的节点 (checkedKeys):', checkedKeys)
+  console.log('  - 半勾选的节点 (halfCheckedKeys):', halfCheckedKeys)
+  console.log('  - 最终发送的权限:', selectedMenuPermissions)
+  console.log('  - 权限数量:', selectedMenuPermissions.length)
 
   try {
-    // 统计菜单数量（只统计 :view 权限，即菜单访问权限）
-    const viewPermissions = allKeys.filter(key => key.endsWith(':view'))
+    // 统计菜单数量（只统计 :view 后缀的权限）
+    const viewPermissions = selectedMenuPermissions.filter(key => key.endsWith(':view'))
     const menuCount = viewPermissions.length
     
     await ElMessageBox.confirm(
-      `确定要保存 ${currentRole.value?.label} 的权限配置吗？共选择了 ${menuCount} 个菜单，${allKeys.length} 个权限。`,
+      `确定要保存 ${currentRole.value?.label} 的权限配置吗？共选择了 ${menuCount} 个菜单。`,
       '保存确认',
       {
         confirmButtonText: '确定',
@@ -505,24 +477,61 @@ const handleSave = async () => {
 
     saving.value = true
 
-    // 调用后端API保存权限配置
-    const result = await updateRolePermissions(selectedRole.value, allKeys)
+    // 调用后端API保存权限配置（只保存用户选中的菜单权限）
+    const result = await updateRolePermissions(selectedRole.value, selectedMenuPermissions)
     
     console.log('✅ 保存成功，后端返回:', result)
 
     // 更新本地数据（使用后端返回的实际权限）
-    // 兼容不同的响应格式
     const responseData = result.data || result
-    rolePermissionsData.value[selectedRole.value] = responseData.permissions || allKeys
+    rolePermissionsData.value[selectedRole.value] = responseData.permissions || selectedMenuPermissions
     
     // 更新权限数量（只统计 :view 权限）
     const role = roles.value.find((r) => r.key === selectedRole.value)
     if (role) {
-      const savedViewPermissions = (responseData.permissions || allKeys).filter((p: string) => p.endsWith(':view'))
+      const savedPermissions = responseData.permissions || selectedMenuPermissions
+      const savedViewPermissions = savedPermissions.filter((p: string) => p.endsWith(':view'))
       role.permissionCount = savedViewPermissions.length
     }
 
     ElMessage.success('权限配置保存成功')
+    
+    // 如果修改的是当前用户的角色，提示重新登录
+    const authStore = useAuthStore()
+    if (authStore.userInfo?.role === selectedRole.value) {
+      ElMessageBox.alert(
+        '您修改了自己所属角色的权限，需要重新登录才能看到菜单变化',
+        '提示',
+        {
+          confirmButtonText: '重新登录',
+          callback: () => {
+            authStore.logout()
+          },
+        }
+      )
+      return
+    }
+    
+    // 刷新当前角色的选中状态（使用后端返回的最新权限）
+    const latestPermissions = responseData.permissions || selectedMenuPermissions
+    
+    // 更新 checkedPermissions（使用后端返回的全部权限，不过滤）
+    checkedPermissions.value = latestPermissions
+    
+    // 等待 DOM 更新后刷新树的选中状态
+    await nextTick()
+    
+    if (permissionTreeRef.value) {
+      permissionTreeRef.value.setCheckedKeys([])
+      await nextTick()
+      
+      // 只设置叶子节点的权限
+      const leafPermissions = getLeafPermissions(permissionTree.value)
+      const checkedLeafPermissions = latestPermissions.filter((p: string) => leafPermissions.includes(p))
+      
+      permissionTreeRef.value.setCheckedKeys(checkedLeafPermissions)
+      console.log('✅ 保存后刷新权限树选中状态:', latestPermissions.length, '个权限，其中叶子节点:', checkedLeafPermissions.length)
+    }
   } catch (error: any) {
     if (error !== 'cancel') {
       console.error('❌ 保存失败:', error)
@@ -535,14 +544,15 @@ const handleSave = async () => {
 
 // 初始化
 onMounted(async () => {
-  permissionTree.value = buildPermissionTree()
+  // 从后端加载权限树
+  permissionTree.value = await buildPermissionTree()
   
   // 从后端加载角色权限数据
   await loadRolePermissions()
   
   // 默认选择第一个角色
   if (roles.value.length > 0) {
-    handleSelectRole(roles.value[0].key)
+    await handleSelectRole(roles.value[0].key)
   }
 })
 </script>

@@ -22,6 +22,13 @@ export function getRolePermissions(role: string) {
 }
 
 /**
+ * 获取菜单配置（用于权限配置页面）
+ */
+export function getMenuConfig() {
+  return request.get('/permissions/menus')
+}
+
+/**
  * 更新角色权限配置
  */
 export function updateRolePermissions(role: string, permissions: string[]) {

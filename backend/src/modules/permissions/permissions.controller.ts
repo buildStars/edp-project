@@ -27,6 +27,13 @@ export class PermissionsController {
     return this.permissionsService.getAllRolePermissions();
   }
 
+  @Get('menus')
+  @Roles('ADMIN')
+  @ApiOperation({ summary: '获取菜单配置（用于权限配置页面）' })
+  async getMenuConfig() {
+    return this.permissionsService.getMenuConfig();
+  }
+
   @Get('roles/:role')
   @Roles('ADMIN')
   @ApiOperation({ summary: '获取指定角色的权限' })

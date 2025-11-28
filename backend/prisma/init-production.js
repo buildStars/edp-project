@@ -137,6 +137,10 @@ async function seedPermissions() {
       { code: 'enrollments:gifts', name: '课程赠送管理', module: 'enrollments', description: '管理课程赠送记录' },
       { code: 'enrollments:checkin', name: '签到管理', module: 'enrollments', description: '管理课程签到' },
       { code: 'enrollments:evaluation', name: '评价管理', module: 'enrollments', description: '查看课程评价' },
+      { code: 'trials:view', name: '试听申请', module: 'enrollments', description: '查看试听申请列表' },
+      { code: 'refunds:view', name: '退课申请', module: 'enrollments', description: '查看退课申请列表' },
+      { code: 'course-gifts:view', name: '赠送记录', module: 'enrollments', description: '查看课程赠送记录' },
+      { code: 'evaluations:view', name: '评价管理', module: 'enrollments', description: '查看课程评价' },
       
       // ========== 课件管理 ==========
       { code: 'courseware:view', name: '查看课件', module: 'courseware', description: '查看课件列表' },
@@ -162,9 +166,14 @@ async function seedPermissions() {
       { code: 'credit-requests:review', name: '审批学分申请', module: 'credits', description: '审批学分申请（教务/管理员）' },
       { code: 'credit-requests:cancel', name: '取消学分申请', module: 'credits', description: '取消学分申请' },
       
+      // ========== 审批管理 ==========
+      { code: 'approvals:view', name: '审批管理', module: 'approvals', description: '查看审批管理页面' },
+      { code: 'association-join-requests:view', name: '协会加入申请', module: 'approvals', description: '查看协会加入申请' },
+      
       // ========== 教师专属 ==========
       { code: 'my-courses:view', name: '查看我的课程', module: 'teacher', description: '查看教师自己的课程列表' },
       { code: 'my-students:view', name: '查看我的学员', module: 'teacher', description: '查看教师自己的学员列表' },
+      { code: 'completions:view', name: '结课申请', module: 'teacher', description: '查看教师自己的结课申请列表' },
       
       // ========== 数据统计 ==========
       { code: 'statistics:view', name: '查看统计', module: 'statistics', description: '查看数据统计' },
@@ -174,7 +183,11 @@ async function seedPermissions() {
       { code: 'settings:view', name: '查看设置', module: 'settings', description: '查看系统设置' },
       { code: 'settings:edit', name: '修改设置', module: 'settings', description: '修改系统设置' },
       { code: 'settings:roles', name: '角色权限管理', module: 'settings', description: '管理角色和权限' },
-      { code: 'permissions:manage', name: '权限管理', module: 'settings', description: '管理角色和权限' },
+      { code: 'roles:view', name: '角色权限', module: 'settings', description: '查看角色权限管理页面' },
+      
+      // ========== 审批管理菜单权限 ==========
+      { code: 'credit-reviews:view', name: '学分申请审批', module: 'credits', description: '查看学分申请审批页面' },
+      { code: 'completion-reviews:view', name: '结课申请审批', module: 'completion', description: '查看结课申请审批页面' },
     ];
 
     log(`📝 准备创建 ${allPermissions.length} 个权限...`, 'yellow');
@@ -212,13 +225,15 @@ async function seedPermissions() {
         'advisors:view', 'advisors:assign',
         'organizations:view', 'organizations:create', 'organizations:edit', 'organizations:credits', 'organizations:employees',
         'enrollments:view', 'enrollments:requests', 'enrollments:refunds', 'enrollments:gifts', 'enrollments:checkin', 'enrollments:evaluation',
+        'trials:view', 'refunds:view', 'course-gifts:view', 'evaluations:view',
         'courseware:view', 'courseware:upload', 'courseware:delete',
         'achievements:view', 'achievements:issue', 'achievements:batch-issue', 'achievements:students',
-        'completion:create', 'completion:view', 'completion:review', 'completion:cancel',
-        'credits:manage', 'credit-requests:create', 'credit-requests:view', 'credit-requests:review', 'credit-requests:cancel',
+        'completion:create', 'completion:view', 'completion:review', 'completion:cancel', 'completion-reviews:view',
+        'credits:manage', 'credit-requests:create', 'credit-requests:view', 'credit-requests:review', 'credit-requests:cancel', 'credit-reviews:view',
+        'approvals:view', 'association-join-requests:view',
         'statistics:view',
-        'my-courses:view',
-        'my-students:view',
+        'settings:view', 'roles:view',
+        'my-courses:view', 'my-students:view', 'completions:view',
       ],
       
       // 教师：可以创建和编辑课程，但只能保存为草稿或提交审批
@@ -233,7 +248,7 @@ async function seedPermissions() {
         'enrollments:view', 'enrollments:requests', 'enrollments:refunds', 'enrollments:checkin', 'enrollments:evaluation',
         'courseware:view', 'courseware:upload', 'courseware:delete',
         'achievements:view', 'achievements:issue', 'achievements:students',
-        'completion:create', 'completion:view', 'completion:cancel',
+        'completion:create', 'completion:view', 'completion:cancel', 'completions:view',
         'credit-requests:create', 'credit-requests:view', 'credit-requests:cancel',
         'statistics:view',
       ],

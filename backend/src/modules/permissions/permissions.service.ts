@@ -13,15 +13,7 @@ export class PermissionsService {
    * @returns 权限代码列表
    */
   async getRolePermissions(role: UserRole): Promise<string[]> {
-    // 超级管理员拥有所有权限
-    if (role === UserRole.ADMIN) {
-      const allPermissions = await this.prisma.permission.findMany({
-        select: { code: true },
-      });
-      return allPermissions.map((p) => p.code);
-    }
-
-    // 查询角色的权限
+    // 查询角色的权限（包括管理员，也按实际配置查询）
     const rolePermissions = await this.prisma.rolePermission.findMany({
       where: { role },
       include: {
@@ -31,7 +23,9 @@ export class PermissionsService {
       },
     });
 
-    return rolePermissions.map((rp) => rp.permission.code);
+    const permissions = rolePermissions.map((rp) => rp.permission.code);
+    console.log(`🔍 查询角色 ${role} 的权限: ${permissions.length} 个`);
+    return permissions;
   }
 
   /**
@@ -43,16 +37,15 @@ export class PermissionsService {
       orderBy: [{ module: 'asc' }, { createdAt: 'asc' }],
     });
 
-    // 按模块分组
-    const groupedPermissions = permissions.reduce((acc, permission) => {
-      if (!acc[permission.module]) {
-        acc[permission.module] = [];
-      }
-      acc[permission.module].push(permission);
-      return acc;
-    }, {} as Record<string, any[]>);
+    return permissions;
+  }
 
-    return groupedPermissions;
+  /**
+   * 获取菜单配置（用于权限配置页面）
+   * 返回完整的菜单树结构，包含权限信息
+   */
+  getMenuConfig() {
+    return MENU_CONFIG;
   }
 
   /**
@@ -77,26 +70,46 @@ export class PermissionsService {
   /**
    * 更新角色权限配置
    * @param role 角色
-   * @param permissionCodes 权限代码列表
+   * @param permissionCodes 权限代码列表（前端传入的菜单权限）
    */
   async updateRolePermissions(role: UserRole, permissionCodes: string[]) {
     // 1. 先去重权限代码
     const uniquePermissionCodes = Array.from(new Set(permissionCodes));
     
-    // 2. 获取所有权限的 code -> id 映射
+    // 2. 获取所有权限
     const allPermissions = await this.prisma.permission.findMany({
-      select: { id: true, code: true },
+      select: { id: true, code: true, module: true },
     });
     const permissionMap = new Map<string, string>();
-    allPermissions.forEach((p) => permissionMap.set(p.code, p.id));
+    const allPermissionsByModule = new Map<string, string[]>();
+    
+    allPermissions.forEach((p) => {
+      permissionMap.set(p.code, p.id);
+      
+      // 按模块分组
+      if (!allPermissionsByModule.has(p.module)) {
+        allPermissionsByModule.set(p.module, []);
+      }
+      allPermissionsByModule.get(p.module).push(p.code);
+    });
 
-    // 3. 删除该角色的所有现有权限
+    // 3. 不进行任何自动推导，直接使用前端传入的权限
+    // 前端已经通过 v-permission 指令实现了权限继承逻辑
+    // 后端只需要原样保存前端选中的菜单权限即可
+    const finalPermissionCodes = new Set(uniquePermissionCodes);
+
+    console.log(`📝 角色 ${role} 权限配置:`, {
+      权限数量: uniquePermissionCodes.length,
+      权限列表: uniquePermissionCodes,
+    });
+
+    // 4. 删除该角色的所有现有权限
     await this.prisma.rolePermission.deleteMany({
       where: { role },
     });
 
-    // 4. 创建新的权限关联
-    const validPermissions = uniquePermissionCodes
+    // 5. 创建新的权限关联
+    const validPermissions = Array.from(finalPermissionCodes)
       .map((code) => {
         const permissionId = permissionMap.get(code);
         if (!permissionId) {
@@ -117,7 +130,7 @@ export class PermissionsService {
       });
     }
 
-    // 5. 返回更新后的权限列表
+    // 6. 返回更新后的权限列表
     const finalPermissions = await this.getRolePermissions(role);
     return {
       role,
@@ -133,7 +146,10 @@ export class PermissionsService {
    * @returns 过滤后的菜单配置
    */
   async getMenusByRoleAndPermissions(userRole: UserRole, permissions: string[]): Promise<MenuItem[]> {
-    return this.filterMenus(MENU_CONFIG, userRole, permissions);
+    console.log(`🔍 过滤菜单 - 角色: ${userRole}, 权限数量: ${permissions.length}`);
+    const filteredMenus = this.filterMenus(MENU_CONFIG, userRole, permissions);
+    console.log(`📋 过滤后菜单数量: ${filteredMenus.length}`);
+    return filteredMenus;
   }
 
   /**
@@ -163,8 +179,11 @@ export class PermissionsService {
       if (menu.children && menu.children.length > 0) {
         const filteredChildren = this.filterMenus(menu.children, userRole, permissions);
         
+        console.log(`  📁 ${menu.title}: 原有 ${menu.children.length} 个子菜单, 过滤后 ${filteredChildren.length} 个`);
+        
         // 如果子菜单全部被过滤，则父菜单也不显示
         if (filteredChildren.length === 0) {
+          console.log(`  ❌ ${menu.title}: 所有子菜单被过滤，父菜单也隐藏`);
           continue;
         }
         

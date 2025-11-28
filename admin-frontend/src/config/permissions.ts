@@ -123,26 +123,43 @@ export const menuConfig: MenuItem[] = [
     title: '报名管理',
     icon: 'Tickets',
     permission: 'enrollments:view',
-    hideForRoles: ['TEACHER'], // 教师不显示报名管理
     children: [
       {
         path: '/enrollments/list',
         name: 'EnrollmentsList',
-        title: '课程报名',
+        title: '报名列表',
         permission: 'enrollments:view',
+      },
+      {
+        path: '/enrollments/trials',
+        name: 'Trials',
+        title: '试听申请',
+        permission: 'trials:view',
+      },
+      {
+        path: '/enrollments/refund-requests',
+        name: 'RefundRequests',
+        title: '退课申请',
+        permission: 'refunds:view',
+      },
+      {
+        path: '/enrollments/credit-requests',
+        name: 'CreditRequests',
+        title: '学分申请审批',
+        permission: 'credit-reviews:view',
       },
       {
         path: '/enrollments/course-gifts',
         name: 'CourseGifts',
         title: '赠送记录',
-
+        permission: 'course-gifts:view',
       },
       {
         path: '/enrollments/evaluations',
         name: 'Evaluations',
         title: '评价管理',
-
-
+        permission: 'evaluations:view',
+        hideForRoles: ['TEACHER'],
       },
     ],
   },
@@ -159,52 +176,6 @@ export const menuConfig: MenuItem[] = [
         name: 'MaterialsList',
         title: '课件列表',
         permission: 'courseware:view',
-      },
-    ],
-  },
-  {
-    path: '/approvals',
-    name: 'Approvals',
-    title: '审批管理',
-    icon: 'DocumentChecked',
-    permission: 'approvals:view',
-    hideForRoles: ['TEACHER'], // 教师不显示审批管理
-    children: [
-      {
-        path: '/associations/join-requests',
-        name: 'AssociationJoinRequests',
-        title: '协会加入申请',
-        permission: 'associations:join-requests',
-      },
-      {
-        path: '/enrollments/trials',
-        name: 'Trials',
-        title: '试听报名申请',
-        permission: 'trials:view',
-      },
-      {
-        path: '/courses/approve',
-        name: 'CoursesApprove',
-        title: '课程审批',
-        permission: 'courses:approve',
-      },
-      {
-        path: '/enrollments/credit-requests',
-        name: 'CreditRequests',
-        title: '学分申请审批',
-        permission: 'credit-requests:review',
-      },
-      {
-        path: '/completion-requests',
-        name: 'CompletionRequests',
-        title: '结课申请审批',
-        permission: 'completion:review',
-      },
-      {
-        path: '/enrollments/refund-requests',
-        name: 'RefundRequests',
-        title: '取消报名审批',
-        permission: 'refunds:view',
       },
     ],
   },
@@ -226,7 +197,7 @@ export const menuConfig: MenuItem[] = [
         path: '/settings/roles',
         name: 'RoleSettings',
         title: '角色权限',
-        permission: 'permissions:manage',
+        permission: 'roles:view',
       },
       {
         path: '/settings/ai-config',
@@ -239,15 +210,21 @@ export const menuConfig: MenuItem[] = [
   {
     path: '/teacher',
     name: 'Teacher',
-    title: '我的课程',
+    title: '教学管理',
     icon: 'Reading',
     permission: 'my-courses:view',
     children: [
       {
         path: '/teacher/courses',
         name: 'TeacherCourses',
-        title: '课程列表',
+        title: '我的课程',
         permission: 'my-courses:view',
+      },
+      {
+        path: '/teacher/students',
+        name: 'TeacherStudents',
+        title: '我的学员',
+        permission: 'my-students:view',
       },
       {
         path: '/teacher/credit-requests',
@@ -259,9 +236,17 @@ export const menuConfig: MenuItem[] = [
         path: '/teacher/completion-requests',
         name: 'TeacherCompletionRequests',
         title: '结课申请',
-        permission: 'completion:view',
+        permission: 'completions:view',
       },
     ],
+  },
+  {
+    path: '/completion-requests',
+    name: 'CompletionRequests',
+    title: '结课申请审批',
+    icon: 'CircleCheck',
+    permission: 'completion-reviews:view',
+    hideForRoles: ['TEACHER'], // 教师不显示此菜单（教师有自己的结课申请列表）
   },
   {
     path: '/profile',

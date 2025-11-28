@@ -38,12 +38,30 @@ export const permission: Directive = {
  */
 function checkPermission(value: string | string[], permissions: string[]): boolean {
   if (typeof value === 'string') {
-    return permissions.includes(value)
+    // 1. 直接匹配
+    if (permissions.includes(value)) {
+      return true
+    }
+    
+    // 2. 模块继承：提取模块名，检查是否有 module:view 权限
+    const module = value.split(':')[0]
+    const viewPermission = `${module}:view`
+    return permissions.includes(viewPermission)
   }
 
   if (Array.isArray(value)) {
     // 数组形式表示"或"关系，有任意一个权限即可
-    return value.some((permission) => permissions.includes(permission))
+    return value.some((permission) => {
+      // 1. 直接匹配
+      if (permissions.includes(permission)) {
+        return true
+      }
+      
+      // 2. 模块继承
+      const module = permission.split(':')[0]
+      const viewPermission = `${module}:view`
+      return permissions.includes(viewPermission)
+    })
   }
 
   return false
