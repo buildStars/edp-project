@@ -6,7 +6,8 @@ yarn-error.log*
 pnpm-debug.log*
 
 # Build output
-dist/
+# 允许frontend-uniapp的dist目录上传（用于H5部署）
+!frontend-uniapp/dist/
 build/
 .next/
 out/
@@ -65,6 +66,10 @@ prisma/migrations/*_*
 
 # Uni-app
 unpackage/
+# 但允许 H5 构建产物（用于 Docker 部署）
+!frontend-uniapp/unpackage/dist/
+!frontend-uniapp/unpackage/dist/build/
+!frontend-uniapp/unpackage/dist/build/web/
 .hbuilderx/
 
 # 备份文件

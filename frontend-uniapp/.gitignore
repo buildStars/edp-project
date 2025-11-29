@@ -11,7 +11,7 @@ node_modules/
 .pnp.js
 
 # Build output
-dist/
+# dist/  # 已允许dist目录上传到GitHub
 .DS_Store
 
 # Uni-app 构建目录（开发时的输出忽略）

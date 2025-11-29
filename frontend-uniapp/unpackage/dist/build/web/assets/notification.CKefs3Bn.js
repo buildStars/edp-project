@@ -1,0 +1,1 @@
+import{T as n,U as i,V as a}from"./index-Cljxm-NV.js";function t(i){return n("/api/notifications",i)}function o(){return n("/api/notifications/unread-count")}function r(n){return i("/api/notifications/mark-read",n)}function s(){return a("/api/notifications/clear-read")}export{t as a,s as c,o as g,r as m};

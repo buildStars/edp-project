@@ -1,0 +1,1 @@
+import{U as r,T as i}from"./index-Cljxm-NV.js";function s(i){return r("/api/course-gifts/generate-code",i)}function t(i){return r("/api/course-gifts/claim",i)}function e(i){return r("/api/course-gifts",i)}function n(r){return i("/api/course-gifts/my",r)}export{e as a,n as b,t as c,s as g};

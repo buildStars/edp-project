@@ -1,0 +1,1 @@
+import{T as n,U as e,V as s}from"./index-Cljxm-NV.js";function t(e){return n("/api/news",e)}function a(e){return n(`/api/news/${e}`)}function i(n){return e("/api/news/collect",{newsId:n})}function r(n){return s("/api/news/collect",{newsId:n})}function c(e){return n("/api/news/my-collection",e)}export{a,c as b,i as c,t as g,r as u};
