@@ -223,7 +223,7 @@ async function main() {
       create: {
         phone: '13800138000',
         password: hashedPassword,
-        name: '系统管理员',
+        realName: '系统管理员',
         nickname: '超级管理员',
         role: 'ADMIN',
         status: 'ACTIVE',
