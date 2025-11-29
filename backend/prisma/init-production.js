@@ -280,7 +280,7 @@ async function main() {
     // 4. 初始化系统配置
     console.log('⚙️ 初始化系统配置...');
     await prisma.systemConfig.upsert({
-      where: { id: 1 },
+      where: { id: '1' },
       update: {},
       create: {
         siteName: '高校思政教育平台',
